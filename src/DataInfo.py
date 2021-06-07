@@ -31,10 +31,10 @@ human_chr1 = 'chr1.fa'
 humanPattern = "^chr(?:\d*|[A-Z]*)$"
 weevilPattern = "^weevil.scaffold\d+"
 noPattern = "*"
-
 # shared var
 currDataset = human_chr1
-datasetPath = './dataset/' + currDataset
+
+datasetPath = os.path.join(os.getcwd()) + '/../dataset/' + currDataset
 matchPattern = noPattern
 fragmentN = 5
 cutter = 'GATC'
@@ -43,7 +43,9 @@ commonCount = 5
 
 
 # In[ ]:
+datasetPath
 
 
 
 
+# %%
