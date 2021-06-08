@@ -3,8 +3,7 @@
 
 # In[ ]:
 
-
-import sys
+import os
 import re
 import time
 import copy
@@ -14,7 +13,6 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt
 import statistics
-get_ipython().run_line_magic('matplotlib', 'inline')
 
 from Bio import SeqIO
 from Bio.Seq import Seq
@@ -24,7 +22,7 @@ from collections import Counter, namedtuple
 from prettytable import PrettyTable
 
 import import_ipynb
-from Util import parseSeq
+from SeqUtil import parseSeq
 from DataInfo import currDataset, datasetPath, matchPattern, cutter, cutterLen, fragmentN, commonCount
 from DataStructure import SeqRepeatInfo, PositionInfo, RepeatEvaInfo, TandemRepeatInfo
 
@@ -242,7 +240,8 @@ def evaluateRepeat(seq1, seq2, match=1, mismatch=-0.5):
 
 
 def generateIROutputFile(seqPermutation, matchRatioOfSum = 0.6):
-    with open('./outputFile/outputIR.txt', 'w') as outputFile:
+    filePath = os.path.join(os.getcwd()) + '/../outputFile/outputIR.txt'
+    with open( filePath, 'w') as outputFile:
         for i in range(len(seqPermutation)):
             for j in range(len(seqPermutation[i])):
                 seq1 = seqPermutation[i][j][0] 
@@ -251,16 +250,14 @@ def generateIROutputFile(seqPermutation, matchRatioOfSum = 0.6):
                 if repeatEvaInfo.score > repeatEvaInfo.length * matchRatioOfSum:
                     output = f"""score:{repeatEvaInfo.score}, length:{repeatEvaInfo.length}, mismatch ratio:{repeatEvaInfo.mismatchRatio}\nSeq1:({seq1.chrIdx}, {seq1.baseIdx}) {seq1.seq}\nSeq2:({seq2.chrIdx}, {seq2.baseIdx}) {seq2.seq}\n\n"""
                     outputFile.write(output)
+                    li.append(repeatEvaInfo.length)
 
 
 # In[ ]:
-
-
 def longestCommonLength(fragmentsLenList):
     fragmentsLenCounter = Counter(fragmentsLenList)
     mostCommonFragment = fragmentsLenCounter.most_common(1)
     mostCommonLen , mostCommonCount = mostCommonFragment[0][0], mostCommonFragment[0][1]
-    repeatFragmentLen =[]
     repeatFragmentLen = [mostCommonLen]
     matchIndices = [ idx for idx, value in enumerate(fragmentsLenList) if value == repeatFragmentLen[0]]
     repeatFragmentIndices = copy.copy(matchIndices)
@@ -281,8 +278,6 @@ def longestCommonLength(fragmentsLenList):
 
 
 # In[ ]:
-
-
 def checkTandemRepeatExist(repeatSeq):
     fragmentlengths = repeatSeq[0]
     count = repeatSeq[1]
@@ -291,9 +286,9 @@ def checkTandemRepeatExist(repeatSeq):
 
 # In[2]:
 
-
 def generateTROutputFile(tandemRepeatInfoList, matchRatioOfSum= 0.6):
-    with open('./outputFile/outputTR.txt', 'w') as outputFile:
+    filePath = os.path.join(os.getcwd()) + '/../outputFile/outputTR.txt'
+    with open( filePath, 'w') as outputFile:
         for i in range(len(tandemRepeatInfoList)):
             repeatFragmentLen, repeatFragmentIndices = longestCommonLength(tandemRepeatInfoList[i].fragmentLenList)
             fragmentNum = len(repeatFragmentLen)
@@ -309,9 +304,33 @@ def generateTROutputFile(tandemRepeatInfoList, matchRatioOfSum= 0.6):
                         output = f"""score:{repeatEvaInfo.score}, length:{sum(repeatFragmentLen)}, mismatch ratio:{repeatEvaInfo.mismatchRatio}\nSeq1:({seqPosition.chrIdx}, {seq1BaseSum}) {seq1}\nSeq2:({seqPosition.chrIdx}, {seq2BaseSum}) {seq2}\n\n"""
                         outputFile.write(output)
 
-
 # In[ ]:
+def findRepeatInFragmentN(fragmentsLenList):
+    fragmentsLenCounter = Counter(fragmentsLenList)
+    filteredLenCounter =  { length: count for length, count in fragmentsLenCounter.items() if count > 1 }
+    repeatFragmentDict = dict()
+    for repeatLength, count in filteredLenCounter.items():
+        matchIndices = [ idx for idx, value in enumerate(fragmentsLenList) if repeatLength == value ]
+        repeatFragmentDict[repeatLength] = matchIndices
+    return repeatFragmentDict 
 
+# %%
 
-
-
+def generateFragmentOutputFile(tandemRepeatInfoList, matchRatioOfSum= 0.6):
+    filePath = os.path.join(os.getcwd()) + '/../outputFile/outputFragment.txt'
+    with open(filePath, 'w') as outputFile:
+        for i in range(len(tandemRepeatInfoList)):
+            repeatFragmentDict = findRepeatInFragmentN(tandemRepeatInfoList[i].fragmentLenList)
+            for repeatFragmentLen, repeatFragmentIndices in repeatFragmentDict.items(): 
+                fragmentNum = 1
+                idxComb = list(combinations(repeatFragmentIndices, 2))
+                for seqPosition in tandemRepeatInfoList[i].position:
+                    for k in idxComb:
+                        seq1 = Seq('').join(seqPosition.seq[k[0]:k[0]+fragmentNum])
+                        seq2 = Seq('').join(seqPosition.seq[k[1]:k[1]+fragmentNum])
+                        seq1BaseSum = seqPosition.baseIdx + sum([len(i) for i in seqPosition.seq[:k[0]]])
+                        seq2BaseSum = seqPosition.baseIdx + sum([len(i) for i in seqPosition.seq[:k[1]]])
+                        repeatEvaInfo = evaluateRepeat(seq1 , seq2)
+                        if repeatEvaInfo.score > repeatEvaInfo.length * matchRatioOfSum:
+                            output = f"""score:{repeatEvaInfo.score}, length:{repeatFragmentLen}, mismatch ratio:{repeatEvaInfo.mismatchRatio}\nSeq1:({seqPosition.chrIdx}, {seq1BaseSum}) {seq1}\nSeq2:({seqPosition.chrIdx}, {seq2BaseSum}) {seq2}\n\n"""
+                            outputFile.write(output)
