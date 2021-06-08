@@ -20,16 +20,14 @@ from Bio.SeqIO.FastaIO import FastaIterator
 from itertools import combinations
 from collections import Counter, namedtuple
 from prettytable import PrettyTable
+import importlib
+# importlib.reload(sys.modules['DataStructure'])
 
 import import_ipynb
-from SeqUtil import parseSeq
+from Util.SeqUtil import parseSeq
 from DataInfo import currDataset, datasetPath, matchPattern, cutter, cutterLen, fragmentN, commonCount
-from DataStructure import SeqRepeatInfo, PositionInfo, RepeatEvaInfo, TandemRepeatInfo
-
-
+from DataStructure import SeqRepeatInfo, IRSPositionInfo, TRSPositionInfo, RepeatEvaInfo
 # In[ ]:
-
-
 '''
 Return
 allRepeatSeqCount: repeat seq (if repeatCount > 1)
@@ -46,8 +44,6 @@ def findRepeatSeqs(fragmentsLenList, cutter , fragmentN, commonCount, allRepeatS
 
 
 # In[ ]:
-
-
 def commonRepeatTable(commonRepeatCounter, positionDic, commonCount):
     # compareTable = PrettyTable(['FragmentLen', 'Count', 'Position'])
     compareTable = PrettyTable(['FragmentLen', 'Count'])
@@ -61,9 +57,6 @@ def commonRepeatTable(commonRepeatCounter, positionDic, commonCount):
 
 
 # In[ ]:
-
-
-# interspersed repeats finding, join count and position with seqCombination
 def findRepeatSeq(lenList, N, cutterLen):
     print(f'... start finding repeat seq ...')
     start = time.time()
@@ -86,8 +79,6 @@ def findRepeatSeq(lenList, N, cutterLen):
 
 
 # In[ ]:
-
-
 def commonRepeatSeqsPosition(fragmentsLenList, commonRepeatInfo, positionDic, commonCount):
     positionList = []
     for i in range(commonCount):
@@ -103,8 +94,6 @@ def commonRepeatSeqsPosition(fragmentsLenList, commonRepeatInfo, positionDic, co
 
 
 # In[ ]:
-
-
 # Repeat Position {chr i: startIndex1, startIndex2, startIndex3 ...}
 def commonPositionListToDic(commonPositionList):
     commonPositionDic = dict()
@@ -113,8 +102,6 @@ def commonPositionListToDic(commonPositionList):
 
 
 # In[ ]:
-
-
 def printCommonPositionDic(commonPositionDic):
     keys = list(commonPositionDic.keys())
     for i in range(len(keys)):
@@ -123,8 +110,6 @@ def printCommonPositionDic(commonPositionDic):
 
 
 # In[ ]:
-
-
 def topRepeatSeqCounter(fragmentsSeqList, commonRepeatInfo, positionDic, fragmentN):
     topRepeatValue = commonRepeatInfo[0][0]
     topRepeatCount = commonRepeatInfo[0][1]
@@ -144,8 +129,6 @@ def topRepeatSeqCounter(fragmentsSeqList, commonRepeatInfo, positionDic, fragmen
 
 
 # In[ ]:
-
-
 def printTopSeqPercentageTable(repeatSeqCount, showPartialSeq=True):
     repeatTable = PrettyTable(['Seq', 'Count', 'Percentage(%)'])
     sumCount = sum(repeatSeqCount.values())
@@ -157,38 +140,10 @@ def printTopSeqPercentageTable(repeatSeqCount, showPartialSeq=True):
         repeatTable.add_row([currentSeq, currentCount, currentPro])
     print(repeatTable)
 
-
 # In[ ]:
-
-
 '''
 Return 
-repeatInfoList: SeqRepeatInfo [(fragmentLenList, count, position: PositionInfo(chrIdx, fragmentIdx, baseIdx, seq)), ... ]  
-'''
-def integrateRepeatInfo(fragmentsSeqList, fragmentsLenList, allRepeatSeqCount, positionDic):
-    repeatInfoList = []
-    listLen = len(allRepeatSeqCount)
-    for i in range(listLen):
-        positionList = []
-        lenData = allRepeatSeqCount[i][0]
-        countData = allRepeatSeqCount[i][1]
-        targetPositionDic = positionDic[lenData]
-        for j in range(len(targetPositionDic)):
-            chrIdx = targetPositionDic[j][0]
-            fragmentIdx = targetPositionDic[j][1]
-            baseIdx = sum(fragmentsLenList[chrIdx][:fragmentIdx])+(cutterLen*fragmentIdx)
-            seq = Seq('').join(fragmentsSeqList[chrIdx][fragmentIdx:fragmentIdx+fragmentN])
-            positionList.append(PositionInfo(chrIdx, fragmentIdx, baseIdx, seq))
-        repeatInfoList.append(SeqRepeatInfo(lenData, countData, positionList))
-    return repeatInfoList
-
-
-# In[ ]:
-
-
-'''
-Return 
-repeatInfoList: SeqRepeatInfo [(fragmentLenList, count, position: PositionInfo(chrIdx, fragmentIdx, baseIdx, seq)), ... ]  
+repeatInfoList: SeqRepeatInfo [(fragmentLenList, count, position: TRSPositionInfo(chrIdx, fragmentIdx, baseIdx, seqList)), ... ]  
 '''
 def integrateTandemRepeatInfo(fragmentsSeqList, fragmentsLenList, allRepeatSeqCount, positionDic):
     repeatInfoList = []
@@ -203,14 +158,32 @@ def integrateTandemRepeatInfo(fragmentsSeqList, fragmentsLenList, allRepeatSeqCo
             fragmentIdx = targetPositionDic[j][1]
             baseIdx = sum(fragmentsLenList[chrIdx][:fragmentIdx])+(cutterLen*fragmentIdx)
             seq = fragmentsSeqList[chrIdx][fragmentIdx:fragmentIdx+fragmentN]
-            positionList.append(PositionInfo(chrIdx, fragmentIdx, baseIdx, seq))
+            positionList.append(TRSPositionInfo(chrIdx, fragmentIdx, baseIdx, seq))
+        repeatInfoList.append(SeqRepeatInfo(lenData, countData, positionList))
+    return repeatInfoList
+# In[ ]:
+'''
+Return 
+repeatInfoList: SeqRepeatInfo [(fragmentLenList, count, position: IRSPositionInfo(chrIdx, fragmentIdx, baseIdx, seq)), ... ]  
+'''
+def integrateRepeatInfo(fragmentsSeqList, fragmentsLenList, allRepeatSeqCount, positionDic):
+    repeatInfoList = []
+    listLen = len(allRepeatSeqCount)
+    for i in range(listLen):
+        positionList = []
+        lenData = allRepeatSeqCount[i][0]
+        countData = allRepeatSeqCount[i][1]
+        targetPositionDic = positionDic[lenData]
+        for j in range(len(targetPositionDic)):
+            chrIdx = targetPositionDic[j][0]
+            fragmentIdx = targetPositionDic[j][1]
+            baseIdx = sum(fragmentsLenList[chrIdx][:fragmentIdx])+(cutterLen*fragmentIdx)
+            seqList = Seq('').join(fragmentsSeqList[chrIdx][fragmentIdx:fragmentIdx+fragmentN])
+            positionList.append(IRSPositionInfo(chrIdx, fragmentIdx, baseIdx, seqList))
         repeatInfoList.append(SeqRepeatInfo(lenData, countData, positionList))
     return repeatInfoList
 
-
 # In[ ]:
-
-
 def getIRComb(repeatInfoList):
     seqComb = []
     for i in range (len(repeatInfoList)):
@@ -250,7 +223,6 @@ def generateIROutputFile(seqPermutation, matchRatioOfSum = 0.6):
                 if repeatEvaInfo.score > repeatEvaInfo.length * matchRatioOfSum:
                     output = f"""score:{repeatEvaInfo.score}, length:{repeatEvaInfo.length}, mismatch ratio:{repeatEvaInfo.mismatchRatio}\nSeq1:({seq1.chrIdx}, {seq1.baseIdx}) {seq1.seq}\nSeq2:({seq2.chrIdx}, {seq2.baseIdx}) {seq2.seq}\n\n"""
                     outputFile.write(output)
-                    li.append(repeatEvaInfo.length)
 
 
 # In[ ]:
@@ -295,10 +267,10 @@ def generateTROutputFile(tandemRepeatInfoList, matchRatioOfSum= 0.6):
             idxComb = list(combinations(repeatFragmentIndices, 2))
             for seqPosition in tandemRepeatInfoList[i].position:
                 for k in idxComb:
-                    seq1 = Seq('').join(seqPosition.seq[k[0]:k[0]+fragmentNum])
-                    seq2 = Seq('').join(seqPosition.seq[k[1]:k[1]+fragmentNum])
-                    seq1BaseSum = seqPosition.baseIdx + sum([len(i) for i in seqPosition.seq[:k[0]]])
-                    seq2BaseSum = seqPosition.baseIdx + sum([len(i) for i in seqPosition.seq[:k[1]]])
+                    seq1 = Seq('').join(seqPosition.seqList[k[0]:k[0]+fragmentNum])
+                    seq2 = Seq('').join(seqPosition.seqList[k[1]:k[1]+fragmentNum])
+                    seq1BaseSum = seqPosition.baseIdx + sum([len(i) for i in seqPosition.seqList[:k[0]]])
+                    seq2BaseSum = seqPosition.baseIdx + sum([len(i) for i in seqPosition.seqList[:k[1]]])
                     repeatEvaInfo = evaluateRepeat(seq1 , seq2)
                     if repeatEvaInfo.score > repeatEvaInfo.length * matchRatioOfSum:
                         output = f"""score:{repeatEvaInfo.score}, length:{sum(repeatFragmentLen)}, mismatch ratio:{repeatEvaInfo.mismatchRatio}\nSeq1:({seqPosition.chrIdx}, {seq1BaseSum}) {seq1}\nSeq2:({seqPosition.chrIdx}, {seq2BaseSum}) {seq2}\n\n"""
