@@ -1,4 +1,7 @@
 /dataset
 /.vscode
-.env
 /src/Evaluation/Source
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
