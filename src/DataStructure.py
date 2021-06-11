@@ -16,4 +16,4 @@ TRSPositionInfo = namedtuple(
 )
 
 RepeatEvaInfo = namedtuple("RepeatEvaInfo", ["score", "length", "mismatchRatio"])
-DfamRefSeqInfo = namedtuple("DfamRefSeqInfo", ["id", "length", "seq"])
+DfamConSeqInfo = namedtuple("DfamConSeqInfo", ["id", "length", "seq"])
