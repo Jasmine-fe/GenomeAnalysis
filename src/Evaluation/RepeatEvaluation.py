@@ -102,9 +102,14 @@ def outputPositionBucketClassifier(outputPositionList, bucketNum=10):
 
 
 # In[ ]:
-def checkDfamMatch(outputPositionLookupDic, OutputMatchPositionList, bucketNum=10):
+def checkDfamMatch(
+    outputPositionLookupDic,
+    OutputMatchPositionList,
+    DfamFileName="hg38_dfam_nrph_chr1",
+    bucketNum=10,
+):
     dfamDataset = pd.read_csv(
-        "Evaluation/Source/hg38_dfam_nrph_chr1.hits",
+        f"Evaluation/Source/{DfamFileName}.hits",
         sep="\t",
         header=0,
         usecols=["familyAcc", "familyName", "aliSt", "aliEn", "envSt", "envEn"],
