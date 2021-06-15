@@ -200,8 +200,10 @@ def findRepeatInFragmentN(fragmentsLenList):
 
 
 # %%
-def generateFragmentOutputFile(tandemRepeatInfoList, matchRatioOfSum=0.6):
-    filePath = os.path.join(os.getcwd()) + "/../outputFile/outputFragment.txt"
+def generateFragmentOutputFile(
+    tandemRepeatInfoList, outputFileName="outputFragment", matchRatioOfSum=0.6
+):
+    filePath = os.path.join(os.getcwd()) + f"/../outputFile/{outputFileName}.txt"
     with open(filePath, "w") as outputFile:
         for i in range(len(tandemRepeatInfoList)):
             repeatFragmentDict = findRepeatInFragmentN(
@@ -227,8 +229,10 @@ def generateFragmentOutputFile(tandemRepeatInfoList, matchRatioOfSum=0.6):
 
 
 # In[2]:
-def generateTROutputFile(tandemRepeatInfoList, matchRatioOfSum=0.6):
-    filePath = os.path.join(os.getcwd()) + "/../outputFile/outputTR.txt"
+def generateTROutputFile(
+    tandemRepeatInfoList, outputFileName="outputTR", matchRatioOfSum=0.6
+):
+    filePath = os.path.join(os.getcwd()) + f"/../outputFile/{outputFileName}.txt"
     with open(filePath, "w") as outputFile:
         for i in range(len(tandemRepeatInfoList)):
             repeatFragmentLen, repeatFragmentIndices = longestRepeatLenInN(
@@ -255,8 +259,10 @@ def generateTROutputFile(tandemRepeatInfoList, matchRatioOfSum=0.6):
 # In[ ]:
 
 
-def generateIROutputFile(seqPermutation, matchRatioOfSum=0.6):
-    filePath = os.path.join(os.getcwd()) + "/../outputFile/outputIR.txt"
+def generateIROutputFile(
+    seqPermutation, outputFileName="outputIR", matchRatioOfSum=0.6
+):
+    filePath = os.path.join(os.getcwd()) + f"/../outputFile/{outputFileName}.txt"
     with open(filePath, "w") as outputFile:
         for i in range(len(seqPermutation)):
             for j in range(len(seqPermutation[i])):
