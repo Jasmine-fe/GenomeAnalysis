@@ -181,6 +181,7 @@ def longestRepeatLenInN(fragNLenList):
 # In[ ]:
 def checkTandemRepeatExist(repeatSeq):
     fragNLenList = repeatSeq[0]
+    print("fragNLenList", len(fragNLenList))
     return len(fragNLenList) != len(set(fragNLenList))
 
 
@@ -268,7 +269,8 @@ def generateIROutputFile(
             for j in range(len(seqPermutation[i])):
                 seq1 = seqPermutation[i][j][0]
                 seq2 = seqPermutation[i][j][1]
-                repeatEvaInfo = evaluateRepeat(seq1.seq, seq2.seq)
-                if repeatEvaInfo.score > repeatEvaInfo.length * matchRatioOfSum:
-                    output = f"""score:{repeatEvaInfo.score}, length:{repeatEvaInfo.length}, mismatch ratio:{repeatEvaInfo.mismatchRatio}\nSeq1:({seq1.chrIdx}, {seq1.baseIdx}) {seq1.seq}\nSeq2:({seq2.chrIdx}, {seq2.baseIdx}) {seq2.seq}\n\n"""
-                    outputFile.write(output)
+                if len(seq1.seq) != 0:
+                    repeatEvaInfo = evaluateRepeat(seq1.seq, seq2.seq)
+                    if repeatEvaInfo.score > repeatEvaInfo.length * matchRatioOfSum:
+                        output = f"""score:{repeatEvaInfo.score}, length:{repeatEvaInfo.length}, mismatch ratio:{repeatEvaInfo.mismatchRatio}\nSeq1:({seq1.chrIdx}, {seq1.baseIdx}) {seq1.seq}\nSeq2:({seq2.chrIdx}, {seq2.baseIdx}) {seq2.seq}\n\n"""
+                        outputFile.write(output)
