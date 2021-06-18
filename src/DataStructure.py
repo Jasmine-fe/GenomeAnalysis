@@ -20,4 +20,4 @@ RepeatEvaInfo = namedtuple("RepeatEvaInfo", ["score", "length", "mismatchRatio"]
 
 DfamConSeqInfo = namedtuple("DfamConSeqInfo", ["id", "length", "seq"])
 
-OutputMatchPositionInfo = namedtuple("OutputMatchPositionInfo", ["startIdx", "endIdx"])
+PositionInfo = namedtuple("PositionInfo", ["startIdx", "endIdx"])
