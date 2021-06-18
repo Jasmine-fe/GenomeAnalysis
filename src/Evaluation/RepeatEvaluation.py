@@ -131,13 +131,12 @@ def checkDfamMatch(
                 for outputRow in OutputMatchPositionList[
                     eachBucketNum * bucketIdx : eachBucketNum * (bucketIdx + 1) - 1
                 ]:
-                    lower, upper = (start - length), (end + length)
                     if (
-                        (outputRow.startIdx >= lower and outputRow.startIdx <= upper)
-                        or (outputRow.endIdx <= lower and outputRow.endIdx >= upper)
+                        (outputRow.startIdx >= start and outputRow.startIdx <= end)
+                        or (outputRow.endIdx <= start and outputRow.endIdx >= end)
                         or (
-                            (outputRow.startIdx + outputRow.endIdx) / 2 >= lower
-                            and (outputRow.startIdx + outputRow.endIdx) / 2 <= upper
+                            (outputRow.startIdx + outputRow.endIdx) / 2 >= start
+                            and (outputRow.startIdx + outputRow.endIdx) / 2 <= end
                         )
                     ):
                         flag = 1
