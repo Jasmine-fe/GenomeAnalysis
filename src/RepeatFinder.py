@@ -121,8 +121,20 @@ def integrateRepeatInfo(
                 positionList.append(
                     IRSPositionInfo(chrIdx, fragmentIdx, baseIdx, seqList)
                 )
-        repeatInfoList.append(RepeatFragNInfo(lenData, countData, positionList))
+        filterPositionList = filterSeqPosition(positionList)
+        repeatInfoList.append(RepeatFragNInfo(lenData, countData, filterPositionList))
     return repeatInfoList
+
+
+def filterSeqPosition(positionList):
+    filterPositionList = []
+    seqCounter = Counter([i.seq for i in positionList])
+    repeatSeqs = [x for x, count in seqCounter.items() if count > 1]
+    for i in positionList:
+        if i.seq in repeatSeqs:
+            filterPositionList.append(i)
+
+    return filterPositionList
 
 
 # In[ ]:
@@ -181,7 +193,6 @@ def longestRepeatLenInN(fragNLenList):
 # In[ ]:
 def checkTandemRepeatExist(repeatSeq):
     fragNLenList = repeatSeq[0]
-    print("fragNLenList", len(fragNLenList))
     return len(fragNLenList) != len(set(fragNLenList))
 
 
