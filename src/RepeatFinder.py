@@ -21,6 +21,7 @@ from collections import Counter, namedtuple
 from prettytable import PrettyTable
 import importlib
 
+
 # importlib.reload(sys.modules["DataStructure"])
 
 import import_ipynb
@@ -85,6 +86,7 @@ def commonRepeatFragLenTable(commonRepeatFragLenCounter, repeatFragNPositionDict
 """
 Params
 repeatType: 1-Tandem Repeat Sequence, 2-Interspersed Repeat Sequence
+filtered: for fragmentN (a1, a2, a3), return position where seqs have the same seq.
 Return 
 repeatInfoList: RepeatFragNInfo [(fragmentLenList, count, position: TRSPositionInfo / IRSPositionInfo (chrIdx, fragmentIdx, baseIdx, seq / seqList)), ... ]  
 """
@@ -96,6 +98,7 @@ def integrateRepeatInfo(
     repeatFragNLenList,
     repeatFragNPositionDict,
     repeatType=1,
+    filtered=True,
 ):
     repeatInfoList = []
     listLen = len(repeatFragNLenList)
@@ -123,6 +126,10 @@ def integrateRepeatInfo(
                 )
         filterPositionList = filterSeqPosition(positionList)
         repeatInfoList.append(RepeatFragNInfo(lenData, countData, filterPositionList))
+
+    if filtered:
+        repeatInfoList = [i for i in repeatInfoList if len(i.position) > 0]
+
     return repeatInfoList
 
 
@@ -133,7 +140,6 @@ def filterSeqPosition(positionList):
     for i in positionList:
         if i.seq in repeatSeqs:
             filterPositionList.append(i)
-
     return filterPositionList
 
 
@@ -283,5 +289,5 @@ def generateIROutputFile(
                 if len(seq1.seq) != 0:
                     repeatEvaInfo = evaluateRepeat(seq1.seq, seq2.seq)
                     if repeatEvaInfo.score > repeatEvaInfo.length * matchRatioOfSum:
-                        output = f"""score:{repeatEvaInfo.score}, length:{repeatEvaInfo.length}, mismatch ratio:{repeatEvaInfo.mismatchRatio}\nSeq1:({seq1.chrIdx}, {seq1.baseIdx}) {seq1.seq}\nSeq2:({seq2.chrIdx}, {seq2.baseIdx}) {seq2.seq}\n\n"""
+                        output = f"score:{repeatEvaInfo.score}, length:{repeatEvaInfo.length}, mismatch ratio:{repeatEvaInfo.mismatchRatio}\nSeq1:({seq1.chrIdx}, {seq1.baseIdx}) {seq1.seq}\nSeq2:({seq2.chrIdx}, {seq2.baseIdx}) {seq2.seq}\n"
                         outputFile.write(output)
