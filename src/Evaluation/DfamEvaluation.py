@@ -3,12 +3,10 @@ import math
 import numpy as np
 import pandas as pd
 from DataStructure import DfamConSeqInfo, PositionInfo, DfamPositionInfo
-from Evaluation.RepeatEvaluation import RepeatEvaluation
 
 
-class DfamEvaluation(RepeatEvaluation):
+class DfamEvaluation:
     def __init__(self):
-        self.repeatPositionList = super().repeatInfoList
         self.dfamPositionList = []
 
     def getDfamConSeqData(self):
@@ -92,6 +90,8 @@ class DfamEvaluation(RepeatEvaluation):
 
     def checkDfamMatch(
         self,
+        repeatPositionList,
+        repeatPositionLookupDic,
         readFileName,
         bucketNum=10,
     ):
@@ -102,17 +102,17 @@ class DfamEvaluation(RepeatEvaluation):
             usecols=["familyAcc", "familyName", "startIdx", "endIdx"],
         )
         dfamDatasetMatchList = [False] * len(dfamDataset)
-        eachBucketNum = int(len(self.repeatPositionList) / bucketNum)
+        eachBucketNum = int(len(repeatPositionList) / bucketNum)
         for idx in range(len(dfamDataset)):
             row = dfamDataset.iloc[idx]
             start, end = row.start, row.end
             flag = 0
             for bucketIdx in range(bucketNum):
                 if (
-                    start >= self.repeatPositionLookupDic[bucketIdx][0]
-                    and start <= self.repeatPositionLookupDic[bucketIdx][1]
+                    start >= repeatPositionLookupDic[bucketIdx][0]
+                    and start <= repeatPositionLookupDic[bucketIdx][1]
                 ):
-                    for outputRow in self.repeatPositionList[
+                    for outputRow in repeatPositionList[
                         eachBucketNum * bucketIdx : eachBucketNum * (bucketIdx + 1) - 1
                     ]:
                         if outputRow.startIdx in range(
