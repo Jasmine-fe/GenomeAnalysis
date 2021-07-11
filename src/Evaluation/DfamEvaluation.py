@@ -3,6 +3,7 @@ import math
 import numpy as np
 import pandas as pd
 from DataStructure import DfamConSeqInfo, PositionInfo, DfamPositionInfo
+from DataInfo import chrPattern, chrKey
 
 
 class DfamEvaluation:
@@ -140,6 +141,17 @@ class DfamEvaluation:
                 if flag:
                     break
         return dfamDatasetMatchList
+
+
+def familyHitChrGroupBy(familyHitFile):
+    df = pd.read_csv(f"./Evaluation/Source/{familyHitFile}", delimiter="\t")
+    chrClassification = df.groupby("seqName")
+    chrClassification.size()
+    chrFamilyCount = {}
+    for index, value in chrClassification.size().items():
+        if re.match(chrPattern, index):
+            chrFamilyCount[index] = value
+    return chrFamilyCount
 
 
 def getfamilySeq(familyHitFile, seq):
