@@ -17,6 +17,8 @@ human_chrY = "chrY.fa"
 human_chr17 = "chr17.fa"
 human_chr19 = "chr19.fa"
 
+chrKey = [i for i in range(1, 23)] + ["X", "Y"]
+
 # match pattern
 chrPattern = "^chr(?:\d*|[A-Z]*)$"
 noPattern = "*"
