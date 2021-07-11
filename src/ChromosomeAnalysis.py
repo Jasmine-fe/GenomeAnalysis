@@ -8,5 +8,6 @@ def getChrBaseLengthDic():
     chrBaseLengthDic = {}
     for idx, row in chrSize.iterrows():
         key = chr + row["Chromosome"]
-        chrBaseLengthDic[key] = row["BaseLength"]
+        value = int(row["BaseLength"].replace(",", ""))
+        chrBaseLengthDic[key] = value
     return chrBaseLengthDic
