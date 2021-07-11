@@ -86,7 +86,6 @@ def commonRepeatFragLenTable(commonRepeatFragLenCounter, repeatFragNPositionDict
 """
 Params
 repeatType: 1-Tandem Repeat Sequence, 2-Interspersed Repeat Sequence
-filtered: for fragmentN (a1, a2, a3), return position where seqs have the same seq.
 Return 
 repeatInfoList: RepeatFragNInfo [(fragmentLenList, count, position: TRSPositionInfo / IRSPositionInfo (chrIdx, fragmentIdx, baseIdx, seq / seqList)), ... ]  
 """
@@ -98,39 +97,50 @@ def integrateRepeatInfo(
     repeatFragNLenList,
     repeatFragNPositionDict,
     repeatType=1,
-    filtered=True,
 ):
     repeatInfoList = []
     listLen = len(repeatFragNLenList)
     for i in range(listLen):
         positionList = []
-        lenData = repeatFragNLenList[i][0]
-        countData = repeatFragNLenList[i][1]
-        targetPositionDic = repeatFragNPositionDict[lenData]
+        fragmentLenList = repeatFragNLenList[i][0]
+        count = repeatFragNLenList[i][1]
+        targetPositionDic = repeatFragNPositionDict[fragmentLenList]
         for j in range(len(targetPositionDic)):
             chrIdx = targetPositionDic[j][0]
             fragmentIdx = targetPositionDic[j][1]
-            baseIdx = sum(fragmentsLenList[chrIdx][:fragmentIdx]) + (
-                cutterLen * fragmentIdx
+            baseIdx = sum(fragmentsLenList[chrIdx][:fragmentIdx]) + cutterLen * (
+                fragmentIdx - 1
             )
             # repeat type, TRS or IRS
             if repeatType == 1:
                 seq = fragmentsSeqList[chrIdx][fragmentIdx : fragmentIdx + fragmentN]
                 positionList.append(TRSPositionInfo(chrIdx, fragmentIdx, baseIdx, seq))
             elif repeatType == 2:
-                seqList = Seq("").join(
-                    fragmentsSeqList[chrIdx][fragmentIdx : fragmentIdx + fragmentN]
+                seqList = (
+                    Seq(cutter)
+                    + Seq(cutter).join(
+                        fragmentsSeqList[chrIdx][fragmentIdx : fragmentIdx + fragmentN]
+                    )
+                    + Seq(cutter)
                 )
                 positionList.append(
                     IRSPositionInfo(chrIdx, fragmentIdx, baseIdx, seqList)
                 )
-        filterPositionList = filterSeqPosition(positionList)
-        repeatInfoList.append(RepeatFragNInfo(lenData, countData, filterPositionList))
-
-    if filtered:
-        repeatInfoList = [i for i in repeatInfoList if len(i.position) > 0]
-
+        repeatInfoList.append(RepeatFragNInfo(fragmentLenList, count, positionList))
     return repeatInfoList
+
+
+def filterRepeatInfo(repeatInfoList):
+    filterRepeatInfoList = []
+    for i in repeatInfoList:
+        filterPosition = filterSeqPosition(i.position)
+        if len(filterPosition) > 1:
+            positionList = filterPosition
+            count = len(filterPosition)
+            filterRepeatInfoList.append(
+                RepeatFragNInfo(i.fragmentLenList, count, positionList)
+            )
+    return filterRepeatInfoList
 
 
 def filterSeqPosition(positionList):
