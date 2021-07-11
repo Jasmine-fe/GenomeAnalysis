@@ -25,3 +25,7 @@ PositionInfo = namedtuple("PositionInfo", ["startIdx", "endIdx"])
 DfamPositionInfo = namedtuple(
     "PositionInfo", ["familyAcc", "familyName", "startIdx", "endIdx"]
 )
+
+refSeqSimilarityInfo = namedtuple(
+    "refSeqSimilarityInfo", ["hitId", "targetSeqLength", "similarityPercentage"]
+)
