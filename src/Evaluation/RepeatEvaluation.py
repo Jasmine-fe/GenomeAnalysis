@@ -23,7 +23,7 @@ class RepeatEvaluation:
 
     def getRepeatPositionList(self):
         for repeatN in self.repeatInfoList:
-            repeatFragNLen = sum(repeatN.fragmentLenList) + cutterLen * (fragmentN - 1)
+            repeatFragNLen = sum(repeatN.fragmentLenList) + cutterLen * fragmentN
             for fragposition in repeatN.position:
                 self.repeatPositionList.append(
                     PositionInfo(
@@ -72,7 +72,7 @@ class RepeatEvaluation:
                     ]:
                         if dfamPosition.startIdx in range(
                             start, end
-                        ) or dfamPosition.endIdx in range(start, end + 100):
+                        ) or dfamPosition.endIdx in range(start, end):
                             matchedFamilyAccList.append(dfamPosition.familyAcc)
                             matchedFamilyNameList.append(dfamPosition.familyName)
                             flag = 1
