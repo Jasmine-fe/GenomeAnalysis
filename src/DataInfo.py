@@ -14,16 +14,19 @@ danioRerioDataset = "DanioRerio.fasta"
 humanDataset = "hg38.fa"
 human_chr1 = "chr1.fa"
 human_chrY = "chrY.fa"
+human_chr17 = "chr17.fa"
+human_chr19 = "chr19.fa"
+
 # match pattern
-humanPattern = "^chr(?:\d*|[A-Z]*)$"
+chrPattern = "^chr(?:\d*|[A-Z]*)$"
 noPattern = "*"
 # shared var
-currDataset = human_chr1
+currDataset = human_chr19
 currDatasetName = re.search(r"([^.]+)", currDataset).group()
 
 datasetPath = os.path.join(os.getcwd()) + "/../dataset/" + currDataset
 matchPattern = noPattern
-fragmentN = 5
+fragmentN = 1
 cutter = "GATC"
 cutterLen = len(cutter)
 commonCount = 5
