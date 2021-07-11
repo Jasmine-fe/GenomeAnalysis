@@ -8,6 +8,7 @@ from DataStructure import DfamConSeqInfo, PositionInfo, DfamPositionInfo
 class DfamEvaluation:
     def __init__(self):
         self.dfamPositionList = []
+        self.dfamPositionLookupDic = dict()
 
     def getDfamConSeqData(self):
         # init DfamConSeqInfo value
@@ -66,7 +67,7 @@ class DfamEvaluation:
 
     def getDfamPositionList(self, readFileName):
         dfamDataset = pd.read_csv(
-            f"Evaluation/Source/{readFileName}.txt",
+            f"Evaluation/Source/{readFileName}",
             sep="\t",
             header=0,
             usecols=[
@@ -87,6 +88,21 @@ class DfamEvaluation:
             key=lambda tup: tup[2]
         )  # choose by key name (startIdx)
         return self.dfamPositionList
+
+    def positionBucketClassifier(self, bucketNum=10):
+        eachBucketNum = int(len(self.dfamPositionList) / bucketNum)
+        for i in range(bucketNum):
+            firstStartIdx, lastStartIdx = (
+                self.dfamPositionList[eachBucketNum * i].startIdx,
+                self.dfamPositionList[(eachBucketNum * (i + 1) - 1)].startIdx,
+            )
+            self.dfamPositionLookupDic[i] = (firstStartIdx, lastStartIdx)
+        # handle eachBucketNum remainder
+        self.dfamPositionLookupDic[bucketNum - 1] = (
+            self.dfamPositionLookupDic[bucketNum - 1][0],
+            self.dfamPositionList[-1].startIdx,
+        )
+        return self.dfamPositionLookupDic
 
     def checkDfamMatch(
         self,
@@ -124,3 +140,16 @@ class DfamEvaluation:
                 if flag:
                     break
         return dfamDatasetMatchList
+
+
+def getfamilySeq(familyHitFile, seq):
+    familyPosition = pd.read_csv(
+        f"Evaluation/Source/{familyHitFile}",
+        sep="\t",
+        header=0,
+        usecols=["familyAcc", "familyName", "startIdx", "endIdx"],
+    )
+    seqList = []
+    for idx, row in familyPosition.iterrows():
+        seqList.append(seq[row["startIdx"] : row["endIdx"]])
+    return seqList
