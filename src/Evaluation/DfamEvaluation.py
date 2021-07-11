@@ -2,8 +2,14 @@ import re
 import math
 import numpy as np
 import pandas as pd
-from DataStructure import DfamConSeqInfo, PositionInfo, DfamPositionInfo
+from Bio import SeqIO, pairwise2
 from DataInfo import chrPattern, chrKey
+from DataStructure import (
+    DfamConSeqInfo,
+    PositionInfo,
+    DfamPositionInfo,
+    refSeqSimilarityInfo,
+)
 
 
 class DfamEvaluation:
@@ -161,7 +167,36 @@ def getfamilySeq(familyHitFile, seq):
         header=0,
         usecols=["familyAcc", "familyName", "startIdx", "endIdx"],
     )
-    seqList = []
+    familySeqList = []
     for idx, row in familyPosition.iterrows():
-        seqList.append(seq[row["startIdx"] : row["endIdx"]])
-    return seqList
+        familySeqList.append(seq[row["startIdx"] : row["endIdx"]])
+    return familySeqList
+
+
+def getConsensusSeq(consensusSeqFile):
+    consensusSeqPath = f"./Evaluation/Source/{consensusSeqFile}"
+    fastaSeqs = SeqIO.parse(open(consensusSeqPath), "fasta")
+    seqs = [i.seq for i in fastaSeqs]
+    consensusSeq = seqs[0]
+    return consensusSeq
+
+
+def refSeqSimilarity(consensusSeq, familySeqList):
+    familySeqSimilarityList = []
+    for idx, targetSeq in enumerate(familySeqList):
+        alignments = pairwise2.align.localxx(consensusSeq, targetSeq)
+        targetLength = len(targetSeq)
+        similarityPercentage = (
+            round(alignments[0].score / targetLength, 2) if len(alignments) > 0 else 0
+        )
+        familySeqSimilarityList.append(
+            refSeqSimilarityInfo(
+                hitId=idx,
+                targetSeqLength=targetLength,
+                similarityPercentage=similarityPercentage,
+            )
+        )
+        print(
+            f"hitId: {idx}, targetLength: {targetLength}, similarityPercentage: {similarityPercentage}"
+        )
+    return familySeqSimilarityList
