@@ -9,21 +9,18 @@ from DataStructure import RepeatFragNInfo
 
 
 # dataset
-mouseDataset = "mm39.fa"
-danioRerioDataset = "DanioRerio.fasta"
 humanDataset = "hg38.fa"
 human_chr1 = "chr1.fa"
-human_chrY = "chrY.fa"
 human_chr17 = "chr17.fa"
-human_chr19 = "chr19.fa"
-
-chrKey = [i for i in range(1, 23)] + ["X", "Y"]
+humanChrKey = [i for i in range(1, 23)] + ["X", "Y"]
+dmChrX = "dm6/chrX.fa"
 
 # match pattern
 chrPattern = "^chr(?:\d*|[A-Z]*)$"
 noPattern = "*"
+
 # shared var
-currDataset = human_chr19
+currDataset = dmChrX
 currDatasetName = re.search(r"([^.]+)", currDataset).group()
 
 datasetPath = os.path.join(os.getcwd()) + "/../dataset/" + currDataset
