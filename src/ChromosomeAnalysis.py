@@ -11,3 +11,11 @@ def getChrBaseLengthDic():
         value = int(row["BaseLength"].replace(",", ""))
         chrBaseLengthDic[key] = value
     return chrBaseLengthDic
+
+
+def getFragmentLengthDesc(fragmentsLenList):
+    """
+    output mean, std, 25%....
+    """
+    s = pd.Series(fragmentsLenList)
+    return s.describe()
