@@ -1,9 +1,13 @@
-# In[ ]:
+import seaborn as sns
 import matplotlib.pyplot as plt
 from collections import Counter
 
-# In[ ]:
-# sortedLenList = [(lengthValue: count), ... ]
+
+def lengthScatterDistributionPlot(xList):
+    sns.set(rc={"figure.figsize": (6, 2.5)})
+    sns.stripplot(x=xList, linewidth=1.0, palette="deep")
+
+
 def fragmentLenPlot(sortedLenList):
     x, y = [], []
     for len, count in sortedLenList:
@@ -17,7 +21,6 @@ def fragmentLenPlot(sortedLenList):
     return 0
 
 
-# In[1]:
 def fragmentLengthDistribution(rfLenList):
     rfCounter = Counter(rfLenList)
     rfCommonLenList = rfCounter.most_common(
