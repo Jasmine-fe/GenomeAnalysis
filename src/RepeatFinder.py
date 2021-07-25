@@ -31,7 +31,6 @@ from DataInfo import (
     datasetPath,
     matchPattern,
     cutter,
-    cutterLen,
     fragmentN,
     commonCount,
 )
@@ -70,7 +69,7 @@ def findRepeatSeqs(fragmentsLenList):
 
 
 # In[ ]:
-def commonRepeatFragLenTable(commonRepeatFragLenCounter, repeatFragNPositionDict):
+def commonRepeatFragLenTable(commonRepeatFragLenCounter, repeatFragNPositionDict={}):
     # compareTable = PrettyTable(['FragmentLen', 'Count', 'Position'])
     table = PrettyTable(["FragLen", "Count"])
     for i in range(commonCount):
@@ -100,6 +99,7 @@ def integrateRepeatInfo(
 ):
     repeatInfoList = []
     listLen = len(repeatFragNLenList)
+    cutterLen = len(cutter)
     for i in range(listLen):
         positionList = []
         fragmentLenList = repeatFragNLenList[i][0]
@@ -290,7 +290,7 @@ def generateTROutputFile(
 def generateIROutputFile(
     seqPermutation, outputFileName="outputIR", matchRatioOfSum=0.6
 ):
-    filePath = os.path.join(os.getcwd()) + f"/../outputFile/{outputFileName}.txt"
+    repeatEvaInfoList = []
     with open(filePath, "w") as outputFile:
         for i in range(len(seqPermutation)):
             for j in range(len(seqPermutation[i])):
@@ -301,3 +301,5 @@ def generateIROutputFile(
                     if repeatEvaInfo.score > repeatEvaInfo.length * matchRatioOfSum:
                         output = f"score:{repeatEvaInfo.score}, length:{repeatEvaInfo.length}, mismatch ratio:{repeatEvaInfo.mismatchRatio}\nSeq1:({seq1.chrIdx}, {seq1.baseIdx}) {seq1.seq}\nSeq2:({seq2.chrIdx}, {seq2.baseIdx}) {seq2.seq}\n"
                         outputFile.write(output)
+                        repeatEvaInfoList.append(repeatEvaInfo)
+    return repeatEvaInfoList
