@@ -13,8 +13,7 @@ humanDataset = "hg38.fa"
 human_chr1 = "chr1.fa"
 human_chr17 = "chr17.fa"
 humanChrKey = [i for i in range(1, 23)] + ["X", "Y"]
-dmChrX = "dm6/chrX.fa"
-
+dmChrX = "dm6/chrX_sequence.fasta"
 # match pattern
 chrPattern = "^chr(?:\d*|[A-Z]*)$"
 noPattern = "*"
@@ -26,8 +25,11 @@ currDatasetName = re.search(r"([^.]+)", currDataset).group()
 datasetPath = os.path.join(os.getcwd()) + "/../dataset/" + currDataset
 matchPattern = noPattern
 fragmentN = 1
-cutter = "GATC"
-cutterLen = len(cutter)
+
+cutterA = "GATC"
+cutterB = "AAGCTT"
+cutter = cutterB  # current
+
 commonCount = 5
 
 
