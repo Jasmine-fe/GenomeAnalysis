@@ -8,12 +8,9 @@ import math
 import numpy as np
 import pandas as pd
 from Bio import pairwise2
-from collections import namedtuple
-from DataStructure import DfamConSeqInfo, PositionInfo
-from DataInfo import (
-    cutterLen,
-    fragmentN,
-)
+from collections import namedtuple, Counter
+from DataStructure import DfamConSeqInfo, PositionInfo, RepeatFragNInfo
+from DataInfo import fragmentN, cutter
 
 
 class RepeatEvaluation:
@@ -21,10 +18,17 @@ class RepeatEvaluation:
         self.repeatInfoList = repeatInfoList
         self.repeatPositionList = []
         self.repeatPositionLookupDic = dict()
-        self.bucketAmount = 10
+        self.filterRepeatInfoList = []
+        self.filterPositionList = []
+        self.bucketAmount = 50
         self.eachBucketNum = 0
 
     def getRepeatPositionList(self):
+        """
+        Return
+        repeatPositionList: [(startIdx, endIdx), ...]
+        """
+        cutterLen = len(cutter)
         for repeatN in self.repeatInfoList:
             repeatFragNLen = sum(repeatN.fragmentLenList) + cutterLen * fragmentN
             for fragposition in repeatN.position:
@@ -35,11 +39,6 @@ class RepeatEvaluation:
                 )
         self.repeatPositionList.sort(key=lambda x: x[0])
         return self.repeatPositionList
-
-    """
-    Params
-    positionList: [(startIdx, endIdx), ...]
-    """
 
     def positionBucketClassifier(self):
         self.eachBucketNum = int(len(self.repeatPositionList) / self.bucketAmount)
@@ -56,36 +55,8 @@ class RepeatEvaluation:
         )
         return self.repeatPositionLookupDic
 
-    # check output position with TE in Dfam
-    # def checkOutputMatch(self, dfamPositionList, dfamPositionLookupDic, bucketNum=10):
-    #     outputMatchList = [False] * len(self.repeatPositionList)
-    #     matchedFamilyAccList, matchedFamilyNameList = [], []
-    #     for idx, repeatPosition in enumerate(self.repeatPositionList):
-    #         start, end = repeatPosition[0], repeatPosition[1]
-    #         flag = 0
-    #         for bucketIdx in range(bucketNum):
-    #             if (
-    #                 dfamPositionLookupDic[bucketIdx][0]
-    #                 <= start
-    #                 <= dfamPositionLookupDic[bucketIdx][1]
-    #             ):
-    #                 for dfamPosition in dfamPositionList[
-    #                     (self.eachBucketNum * bucketIdx) : (
-    #                         self.eachBucketNum * (bucketIdx + 1) - 1
-    #                     )
-    #                 ]:
-    #                     if dfamPosition.startIdx in range(
-    #                         start, end
-    #                     ) or dfamPosition.endIdx in range(start, end):
-    #                         matchedFamilyAccList.append(dfamPosition.familyAcc)
-    #                         matchedFamilyNameList.append(dfamPosition.familyName)
-    #                         flag = 1
-    #                         print("Match")
-    #                         outputMatchList[idx] = True
-    #                         break
-    #             if flag == 1:
-    #                 break
-    #     return outputMatchList, matchedFamilyAccList, matchedFamilyNameList
+
+# filterRepeatInfoList = filterRepeatInfo(repeatInfoList)
 
 
 # ---------------------------- For single result ---------------------------------
