@@ -16,7 +16,7 @@ from DataStructure import (
 class DfamEvaluation(RepeatEvaluation):
     def __init__(self, repeatInfoList):
         super().__init__(repeatInfoList)
-        hitFileName = "chrX_dm6_dfam.nrph.hits"
+        hitFileName = "chrX_LTR_dm6_dfam.nrph.hits"
         self.dfamPositionList = []
         self.dfamPositionLookupDic = dict()
         self.familyPositionList = []
@@ -44,23 +44,42 @@ class DfamEvaluation(RepeatEvaluation):
         )  # choose by key name (startIdx)
         return self.dfamPositionList
 
-    # def dfamPositionBucketClassifier(self, bucketNum=10):
-    #     self.dfamEachBucketNum = int(len(self.dfamPositionList) / bucketNum)
-    #     for i in range(bucketNum):
-    #         firstStartIdx, lastStartIdx = (
-    #             self.dfamPositionList[self.dfamEachBucketNum * i].startIdx,
-    #             self.dfamPositionList[(self.dfamEachBucketNum * (i + 1) - 1)].startIdx,
-    #         )
-    #         self.dfamPositionLookupDic[i] = (firstStartIdx, lastStartIdx)
-    #     # handle eachBucketNum remainder
-    #     self.dfamPositionLookupDic[bucketNum - 1] = (
-    #         self.dfamPositionLookupDic[bucketNum - 1][0],
-    #         self.dfamPositionList[-1].startIdx,
-    #     )
-    #     return self.dfamPositionLookupDic
+    def checkDfamMatchWithRepeat(self):
+        """
+        How many Dfam intersect with repeat position
+        """
+        dfamMatchList = [False] * len(self.dfamPositionList)
+        matchedFamilyAccList, matchedFamilyNameList = [], []
+        for idx, ref in enumerate(self.dfamPositionList):
+            refStart, refEnd = ref.startIdx, ref.endIdx
+            flag = 0
+            for repeatPosition in self.repeatPositionList:
+                for bucketIdx in range(self.bucketAmount):
+                    if (
+                        self.repeatPositionLookupDic[bucketIdx][0]
+                        <= refStart
+                        <= self.repeatPositionLookupDic[bucketIdx][1]
+                    ):
+                        if refStart in range(
+                            repeatPosition.startIdx, repeatPosition.endIdx
+                        ) or refEnd in range(
+                            repeatPosition.startIdx, repeatPosition.endIdx
+                        ):
+                            matchedFamilyAccList.append(ref.familyAcc)
+                            matchedFamilyNameList.append(ref.familyName)
+                            flag = 1
+                            dfamMatchList[idx] = True
+                            break
+                    elif self.repeatPositionLookupDic[bucketIdx][1] > refStart:
+                        break
+                if flag == 1:
+                    break
+        return dfamMatchList, matchedFamilyAccList, matchedFamilyNameList
 
-    # check other match than 0, 1
     def checkRepeatMatchWithDfam(self):
+        """
+        How many repeats intersect with Dfam position
+        """
         repeatMatchList = [False] * len(self.repeatPositionList)
         matchedFamilyAccList, matchedFamilyNameList = [], []
         for idx, repeatPosition in enumerate(self.repeatPositionList):
@@ -85,6 +104,43 @@ class DfamEvaluation(RepeatEvaluation):
                     break
         return repeatMatchList, matchedFamilyAccList, matchedFamilyNameList
 
+    def matchRatio(self, repeatMatchList):
+        totalLen = len(repeatMatchList)
+        matchLen = len(list(filter(lambda x: x, repeatMatchList)))
+        ratio = matchLen / totalLen
+        print(f"matchCount:{matchLen}\tdfamCount:{totalLen}\tRatio:{ratio}")
+        return ratio
+
+    def familyMatchRatio(self, matchedFamilyAccList):
+        matchSet = set(matchedFamilyAccList)
+        dfamSet = set(list(self.dfamHitData["family_acc"]))
+        matchSetLen, dfamSetLen = len(matchSet), len(dfamSet)
+        ratio = round(matchSetLen / dfamSetLen, 2)
+        print("Family Match Result:")
+        print(f"matchCount:{matchSetLen}\tdfamCount:{dfamSetLen}\tRatio:{ratio}")
+        print(f"unmatch acc: {dfamSet.difference(matchSet)}")
+        return ratio
+
+    def getUnmatchInfo(self, DRrepeatMatchList):
+        unMatchDf = pd.DataFrame(columns=["index", "length", "startIdx", "endIdx"])
+        for idx, value in enumerate(DRrepeatMatchList):
+            if value == False:
+                row = self.dfamPositionList[idx]
+                LRTLength = row.endIdx - row.startIdx
+                unMatchDf = unMatchDf.append(
+                    {
+                        "index": idx,
+                        "length": LRTLength,
+                        "startIdx": row.startIdx,
+                        "endIdx": row.endIdx,
+                    },
+                    ignore_index=True,
+                )
+        # print statistic info
+        unMatchLenSeries = pd.Series(list(unMatchDf["length"]))
+        print(unMatchLenSeries.describe())
+        return unMatchDf
+
     # ----------- For specific family --------------------------------------
 
     def getfamilyPositionList(self, familyName):
@@ -101,7 +157,7 @@ class DfamEvaluation(RepeatEvaluation):
             self.familySeqList.append(seq[row["startIdx"] : row["endIdx"]])
         return self.familySeqList
 
-    def refSeqSimilarity(self, consensusSeq, familySeqList):
+    def refFaimlySimilarity(self, consensusSeq, familySeqList):
         familySeqSimilarityList = []
         for idx, targetSeq in enumerate(familySeqList):
             alignments = pairwise2.align.localxx(consensusSeq, targetSeq)
