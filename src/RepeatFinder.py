@@ -26,13 +26,12 @@ import importlib
 
 import import_ipynb
 from Util.SeqUtil import parseSeq
-from DataInfo import (
+from SharedInfo import (
     currDataset,
     datasetPath,
     matchPattern,
-    cutter,
+    cutterA,
     fragmentN,
-    commonCount,
 )
 from DataStructure import (
     RepeatFragNInfo,
@@ -72,7 +71,7 @@ def findRepeatSeqs(fragmentsLenList):
 def commonRepeatFragLenTable(commonRepeatFragLenCounter, repeatFragNPositionDict={}):
     # compareTable = PrettyTable(['FragmentLen', 'Count', 'Position'])
     table = PrettyTable(["FragLen", "Count"])
-    for i in range(commonCount):
+    for i in range(10):
         fragmentLenValue = commonRepeatFragLenCounter[i][0]
         count = commonRepeatFragLenCounter[i][1]
         # position = repeatFragNPositionDict[fragmentLenValue]
@@ -91,6 +90,7 @@ repeatInfoList: RepeatFragNInfo [(fragmentLenList, count, position: TRSPositionI
 
 
 def integrateRepeatInfo(
+    cutter,
     fragmentsSeqList,
     fragmentsLenList,
     repeatFragNLenList,

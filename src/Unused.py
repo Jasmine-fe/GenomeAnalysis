@@ -21,3 +21,9 @@
 # filterRepeatInfoList = filterRepeatInfo(repeatInfoList)
 # seqPermutation = getIRComb(repeatInfoList)
 # repeatEvaInfoList = generateIROutputFile(seqPermutation, outputFileName= f"{currDatasetName}_IRS", matchRatioOfSum=0.8)
+
+# ROO_LTR_df = pd.DataFrame(columns=['seq', 'seqLength'])
+# for idx, row in enumerate(dfamPositionList):
+#     seq = str(parseFastaA[0][row.startIdx: row.endIdx])
+#     seqLength = row.endIdx - row.startIdx
+#     ROO_LTR_df = ROO_LTR_df.append({'seq': seq, 'seqLength': seqLength}, ignore_index=True)

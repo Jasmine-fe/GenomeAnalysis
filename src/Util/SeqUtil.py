@@ -10,13 +10,7 @@ from Bio import SeqIO
 from Bio.Seq import Seq
 from collections import Counter, namedtuple
 from contextlib import redirect_stdout
-from DataInfo import (
-    currDataset,
-    datasetPath,
-    matchPattern,
-    cutter,
-    commonCount,
-)
+from SharedInfo import currDataset, datasetPath, matchPattern, cutterA
 
 
 def parseFasta(currDataset, datasetPath, matchPattern, matchMode=False):
@@ -33,14 +27,14 @@ def parseFasta(currDataset, datasetPath, matchPattern, matchMode=False):
     return seqs
 
 
-def parseSeq(seq, cutter):
+def parseSeq(seq, cutter=cutterA):
     targetNum = seq.count(cutter)
     parseResult = seq.split(cutter)
     fragmentLength = [len(read) for read in parseResult]
     return targetNum, parseResult, fragmentLength
 
 
-def parseSeqByCutter(parseFastaSeqs, cutter=cutter):
+def parseSeqByCutter(parseFastaSeqs, cutter=cutterA):
     start = time.time()
     print(f"...start parse seq by cutter: { cutter }")
     fragmentsLenList = []
