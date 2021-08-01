@@ -10,35 +10,17 @@ import pandas as pd
 from Bio import pairwise2
 from collections import namedtuple, Counter
 from DataStructure import DfamConSeqInfo, PositionInfo, RepeatFragNInfo
-from DataInfo import fragmentN, cutter
+from SharedInfo import fragmentN
 
 
 class RepeatEvaluation:
-    def __init__(self, repeatInfoList):
-        self.repeatInfoList = repeatInfoList
-        self.repeatPositionList = []
+    def __init__(self, repeatPositionList):
+        self.repeatPositionList = repeatPositionList
         self.repeatPositionLookupDic = dict()
         self.filterRepeatInfoList = []
         self.filterPositionList = []
         self.bucketAmount = 50
         self.eachBucketNum = 0
-
-    def getRepeatPositionList(self):
-        """
-        Return
-        repeatPositionList: [(startIdx, endIdx), ...]
-        """
-        cutterLen = len(cutter)
-        for repeatN in self.repeatInfoList:
-            repeatFragNLen = sum(repeatN.fragmentLenList) + cutterLen * fragmentN
-            for fragposition in repeatN.position:
-                self.repeatPositionList.append(
-                    PositionInfo(
-                        fragposition.baseIdx, fragposition.baseIdx + repeatFragNLen
-                    )
-                )
-        self.repeatPositionList.sort(key=lambda x: x[0])
-        return self.repeatPositionList
 
     def positionBucketClassifier(self):
         self.eachBucketNum = int(len(self.repeatPositionList) / self.bucketAmount)

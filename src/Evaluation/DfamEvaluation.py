@@ -14,16 +14,15 @@ from DataStructure import (
 
 
 class DfamEvaluation(RepeatEvaluation):
-    def __init__(self, repeatPositionList):
+    def __init__(self, repeatPositionList, hitFileName="chrX_LTR_dm6_dfam.nrph.hits"):
         super().__init__(repeatPositionList)
-        hitFileName = "chrX_FullLength_LTR_dm6_dfam.nrph.hits"
-        # hitFileName = "chrX_LTR_dm6_dfam.nrph.hits"
         self.dfamPositionList = []
         self.dfamPositionLookupDic = dict()
         self.familyPositionList = []
         self.familySeqSimilarityList = []
         self.dfamBucketAmount = 10
         self.dfamEachBucketNum = 0
+        self.hitFileName = hitFileName
         self.dfamHitData = pd.read_csv(
             f"Evaluation/Source/{hitFileName}", sep="\t", header=0
         )
