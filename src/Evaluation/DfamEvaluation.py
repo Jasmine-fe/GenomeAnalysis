@@ -3,7 +3,7 @@ import math
 import numpy as np
 import pandas as pd
 from Bio import SeqIO, pairwise2
-from DataInfo import chrPattern, humanChrKey
+from SharedInfo import chrPattern, humanChrKey
 from Evaluation.RepeatEvaluation import RepeatEvaluation
 from DataStructure import (
     DfamConSeqInfo,
@@ -14,9 +14,10 @@ from DataStructure import (
 
 
 class DfamEvaluation(RepeatEvaluation):
-    def __init__(self, repeatInfoList):
-        super().__init__(repeatInfoList)
-        hitFileName = "chrX_LTR_dm6_dfam.nrph.hits"
+    def __init__(self, repeatPositionList):
+        super().__init__(repeatPositionList)
+        hitFileName = "chrX_FullLength_LTR_dm6_dfam.nrph.hits"
+        # hitFileName = "chrX_LTR_dm6_dfam.nrph.hits"
         self.dfamPositionList = []
         self.dfamPositionLookupDic = dict()
         self.familyPositionList = []
@@ -140,6 +141,33 @@ class DfamEvaluation(RepeatEvaluation):
         unMatchLenSeries = pd.Series(list(unMatchDf["length"]))
         print(unMatchLenSeries.describe())
         return unMatchDf
+
+    def generateFullLengthLTRFile(
+        self,
+        inputFileName="chrX_LTR_dm6_dfam.nrph.hits",
+        outputFileName="chrX_FullLength_LTR_dm6_dfam.hit",
+    ):
+        df = pd.read_csv(f"Evaluation/Source/{inputFileName}", sep="\t", header=0)
+        idx = 0
+        fullLengthLTRIdxList = []
+        while idx < len(df) - 1:
+            if df.iloc[idx]["family_acc"] == df.iloc[idx + 1]["family_acc"]:
+                fullLengthLTRIdxList.append([idx, idx + 1])
+                idx += 2
+            else:
+                idx += 1
+        flattenFullLengthLTRIdxList = [
+            item for sublist in fullLengthLTRIdxList for item in sublist
+        ]
+        fullLengthDf = df.loc[
+            flattenFullLengthLTRIdxList,
+        ]
+        fullLengthDf.to_csv(
+            f"Evaluation/Source/{outputFileName}",
+            sep="\t",
+            encoding="utf-8",
+            index=False,
+        )
 
     # ----------- For specific family --------------------------------------
 
