@@ -3,36 +3,26 @@ import os
 import sys
 import numpy as np
 import pandas as pd
-from statistics import mean
 import matplotlib.pyplot as plt
 from Bio import SeqIO, pairwise2
 from prettytable import PrettyTable
-from collections import Counter, OrderedDict, namedtuple
+from collections import Counter, namedtuple
 
 import importlib
-from Util.FragmentUtil import fragmentLenPlot
-from Util.SeqUtil import seqInfo, parseFasta, parseSeq, parseSeqByCutter
-from DataStructure import RepeatFragNInfo
-from DataInfo import (
+from DataStructure import PositionInfo
+from Util.SeqUtil import seqInfo, parseFasta, parseSeqByCutter
+from Evaluation.DfamEvaluation import DfamEvaluation
+
+from SharedInfo import (
     currDataset,
     datasetPath,
     matchPattern,
-    commonCount,
-    chrPattern,
+    fragmentN,
 )
 from RepeatFinder import (
     findRepeatSeqs,
     integrateRepeatInfo,
-    getIRComb,
-    evaluateRepeat,
-    generateIROutputFile,
-    checkTandemRepeatExist,
-    generateTROutputFile,
-    generateFragmentOutputFile,
-    filterRepeatInfo,
-    commonRepeatFragLenTable,
 )
-from Evaluation.DfamEvaluation import DfamEvaluation
 
 # importlib.reload(sys.modules['Evaluation'])
 
@@ -42,6 +32,7 @@ class Sequence:
         self.fragmentLenList = []
         self.fragmentSeqList = []
         self.repeatInfoList = []
+        self.repeatPositionList = []
         self.cutter = cutter
         self.parseFastaSeqs = None
 
@@ -62,6 +53,7 @@ class Sequence:
             self.fragmentLenList
         )
         self.repeatInfoList = integrateRepeatInfo(
+            self.cutter,
             self.fragmentSeqList,
             self.fragmentLenList,
             repeatFragNLenList,
@@ -69,3 +61,20 @@ class Sequence:
             repeatType=2,
         )
         return self.repeatInfoList
+
+    def getRepeatPositionList(self):
+        """
+        Return
+        repeatPositionList: [(startIdx, endIdx), ...]
+        """
+        cutterLen = len(self.cutter)
+        for repeatN in self.repeatInfoList:
+            repeatFragNLen = sum(repeatN.fragmentLenList) + cutterLen * fragmentN
+            for fragposition in repeatN.position:
+                self.repeatPositionList.append(
+                    PositionInfo(
+                        fragposition.baseIdx, fragposition.baseIdx + repeatFragNLen
+                    )
+                )
+        self.repeatPositionList.sort(key=lambda x: x[0])
+        return self.repeatPositionList
