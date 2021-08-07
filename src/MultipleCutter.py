@@ -41,6 +41,7 @@ class MultipleCutter:
         return self.matchStateIdxList
 
     def getSpecificStatePositionList(self):
+        self.matchStatePositionList = []
         idx = 0
         while idx < len(self.matchStateIdxList) - 1:
             baseCount = 1
@@ -51,15 +52,17 @@ class MultipleCutter:
             else:
                 if idx + baseCount >= len(self.matchStateIdxList):
                     break
-                elif (
-                    self.matchStateIdxList[idx]
-                    - self.matchStateIdxList[idx + baseCount]
-                ) != baseCount:
+                # elif (
+                #     self.matchStateIdxList[idx]
+                #     - self.matchStateIdxList[idx + baseCount]
+                #     != baseCount
+                # ):
+                else:
                     self.matchStatePositionList.append(
                         PositionInfo(
                             self.matchStateIdxList[idx],
                             self.matchStateIdxList[idx + baseCount - 1],
                         )
                     )
-            idx = idx + baseCount
+                    idx = idx + baseCount
         return self.matchStatePositionList

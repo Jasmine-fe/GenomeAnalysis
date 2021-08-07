@@ -55,7 +55,7 @@ class Sequence:
         repeatFragNLenList, repeatFragNPositionDict = findRepeatSeqs(
             self.fragmentLenList
         )
-        self.repeatInfoList = integrateRepeatInfo(
+        temrepeatInfoList = integrateRepeatInfo(
             self.cutter,
             self.fragmentSeqList,
             self.fragmentLenList,
@@ -63,19 +63,19 @@ class Sequence:
             repeatFragNPositionDict,
             repeatType=2,
         )
-        if lengthLimit:
-            self.repeatInfoList = self.seqLengthLimit()
+        self.repeatInfoList = (
+            self.seqLengthLimit(temrepeatInfoList) if lengthLimit else temrepeatInfoList
+        )
         return self.repeatInfoList
 
-    def seqLengthLimit(self):
-        lowerBound, upperBound = 23, 1500
+    def seqLengthLimit(self, temrepeatInfoList):
+        lowerBound, upperBound = 23, 2000
         lengthLimitList = []
-        for i in self.repeatInfoList:
+        for i in temrepeatInfoList:
             seqLen = i.fragmentLenList[0]  # For N = 1
-            if seqLen >= lowerBound and seqLen <= upperBound:
+            if seqLen <= upperBound:
                 lengthLimitList.append(i)
-        self.repeatInfoList = lengthLimitList
-        return self.repeatInfoList
+        return lengthLimitList
 
     def getRepeatPositionList(self, filter=True):
         """
