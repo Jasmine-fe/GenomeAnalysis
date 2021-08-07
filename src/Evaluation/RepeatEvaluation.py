@@ -17,8 +17,6 @@ class RepeatEvaluation:
     def __init__(self, repeatPositionList):
         self.repeatPositionList = repeatPositionList
         self.repeatPositionLookupDic = dict()
-        self.filterRepeatInfoList = []
-        self.filterPositionList = []
         self.bucketAmount = 50
         self.eachBucketNum = 0
 
@@ -36,9 +34,6 @@ class RepeatEvaluation:
             self.repeatPositionList[-1].startIdx,
         )
         return self.repeatPositionLookupDic
-
-
-# filterRepeatInfoList = filterRepeatInfo(repeatInfoList)
 
 
 # ---------------------------- For single result ---------------------------------

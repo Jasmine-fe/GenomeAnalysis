@@ -184,9 +184,9 @@ class DfamEvaluation(RepeatEvaluation):
             self.familySeqList.append(seq[row["startIdx"] : row["endIdx"]])
         return self.familySeqList
 
-    def refFaimlySimilarity(self, consensusSeq, familySeqList):
-        familySeqSimilarityList = []
-        for idx, targetSeq in enumerate(familySeqList):
+    def consensusSeqSimilarity(self, consensusSeq, seqList):
+        seqSimilarityList = []
+        for idx, targetSeq in enumerate(seqList):
             alignments = pairwise2.align.localxx(consensusSeq, targetSeq)
             targetLength = len(targetSeq)
             similarityPercentage = (
@@ -194,11 +194,11 @@ class DfamEvaluation(RepeatEvaluation):
                 if len(alignments) > 0
                 else 0
             )
-            familySeqSimilarityList.append(
+            seqSimilarityList.append(
                 refSeqSimilarityInfo(
                     hitId=idx,
                     targetSeqLength=targetLength,
                     similarityPercentage=similarityPercentage,
                 )
             )
-        return familySeqSimilarityList
+        return seqSimilarityList
