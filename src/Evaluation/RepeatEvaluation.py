@@ -17,7 +17,7 @@ class RepeatEvaluation:
     def __init__(self, repeatPositionList):
         self.repeatPositionList = repeatPositionList
         self.repeatPositionLookupDic = dict()
-        self.bucketAmount = 50
+        self.bucketAmount = 10
         self.eachBucketNum = 0
 
     def positionBucketClassifier(self):

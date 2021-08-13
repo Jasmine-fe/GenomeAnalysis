@@ -55,10 +55,8 @@ class DfamEvaluation(RepeatEvaluation):
             flag = 0
             for repeatPosition in self.repeatPositionList:
                 for bucketIdx in range(self.bucketAmount):
-                    if (
-                        self.repeatPositionLookupDic[bucketIdx][0]
-                        <= refStart
-                        <= self.repeatPositionLookupDic[bucketIdx][1]
+                    if (self.repeatPositionLookupDic[bucketIdx][0] <= refStart) and (
+                        refEnd <= self.repeatPositionLookupDic[bucketIdx][1]
                     ):
                         if refStart in range(
                             repeatPosition.startIdx, repeatPosition.endIdx
