@@ -15,7 +15,7 @@ class MultipleCutter:
         state - 0 unmatch, 1 union, 2 intersection
         """
         for position in self.repeatPositionList:
-            for base in range(position.startIdx, position.endIdx + 1):
+            for base in range(position.startIdx, position.endIdx):
                 self.seqStateList[base] += 1
         return self.seqStateList
 
@@ -37,6 +37,7 @@ class MultipleCutter:
         return unMatchState, unionState, intersectionState
 
     def getSpecificStateIdxList(self, stateName="union"):
+        self.matchStateIdxList = []
         if stateName == "intersection":
             self.matchStateIdxList = [
                 idx
@@ -55,9 +56,17 @@ class MultipleCutter:
         return self.matchStateIdxList
 
     def getSpecificStatePositionList(self):
+
+        """
+        idx+baseIdx < leng(matchStatePositionList)
+        idx : 400
+        baseIdx = 1
+        baseIdx == (matchStatePositionList[idx+baseIdx] - matchStatePositionList[idx])
+        """
+
         self.matchStatePositionList = []
         idx = 0
-        while idx < len(self.matchStateIdxList) - 1:
+        while self.matchStateIdxList[idx] < self.chrLength:
             baseCount = 1
             while (idx + baseCount < len(self.matchStateIdxList)) and (
                 (self.matchStateIdxList[idx + baseCount] - self.matchStateIdxList[idx])
@@ -65,14 +74,13 @@ class MultipleCutter:
             ):
                 baseCount += 1
             else:
-                if idx + baseCount >= len(self.matchStateIdxList):
-                    return self.matchStatePositionList
-                else:
-                    self.matchStatePositionList.append(
-                        PositionInfo(
-                            self.matchStateIdxList[idx],
-                            self.matchStateIdxList[idx + baseCount],
-                        )
+                self.matchStatePositionList.append(
+                    PositionInfo(
+                        self.matchStateIdxList[idx],
+                        self.matchStateIdxList[idx + baseCount - 1],
                     )
-                    idx = idx + baseCount - 1
+                )
+                if idx + baseCount >= len(self.matchStateIdxList):
+                    break
+            idx = idx + baseCount
         return self.matchStatePositionList

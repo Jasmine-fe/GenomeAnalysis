@@ -50,27 +50,22 @@ class DfamEvaluation(RepeatEvaluation):
         """
         dfamMatchList = [False] * len(self.dfamPositionList)
         matchedFamilyAccList, matchedFamilyNameList = [], []
+
         for idx, ref in enumerate(self.dfamPositionList):
             refStart, refEnd = ref.startIdx, ref.endIdx
             flag = 0
             for repeatPosition in self.repeatPositionList:
-                for bucketIdx in range(self.bucketAmount):
-                    if (self.repeatPositionLookupDic[bucketIdx][0] <= refStart) and (
-                        refEnd <= self.repeatPositionLookupDic[bucketIdx][1]
-                    ):
-                        if refStart in range(
-                            repeatPosition.startIdx, repeatPosition.endIdx
-                        ) or refEnd in range(
-                            repeatPosition.startIdx, repeatPosition.endIdx
-                        ):
-                            matchedFamilyAccList.append(ref.familyAcc)
-                            matchedFamilyNameList.append(ref.familyName)
-                            flag = 1
-                            dfamMatchList[idx] = True
-                            break
-                    elif self.repeatPositionLookupDic[bucketIdx][1] > refStart:
-                        break
-                if flag == 1:
+                # for bucketIdx in range(self.bucketAmount):
+                # if (self.repeatPositionLookupDic[bucketIdx][0] <= refStart) and (
+                #     refEnd <= self.repeatPositionLookupDic[bucketIdx][1]
+                # ):
+                if (
+                    refStart in range(repeatPosition.startIdx, repeatPosition.endIdx)
+                ) or (refEnd in range(repeatPosition.startIdx, repeatPosition.endIdx)):
+                    matchedFamilyAccList.append(ref.familyAcc)
+                    matchedFamilyNameList.append(ref.familyName)
+                    flag = 1
+                    dfamMatchList[idx] = True
                     break
         return dfamMatchList, matchedFamilyAccList, matchedFamilyNameList
 
