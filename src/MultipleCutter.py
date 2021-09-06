@@ -1,35 +1,37 @@
+import re
 from DataStructure import PositionInfo
 
 
 class MultipleCutter:
-    def __init__(self, chrLength, repeatPositionList):
+    def __init__(self, chrLength, seqStateList):
         self.seqStates = {"unMatch": 0, "union": 1, "intersection": 2}
         self.chrLength = chrLength
-        self.repeatPositionList = repeatPositionList
-        self.seqStateList = [0] * self.chrLength
+        self.seqStateList = seqStateList
+        self.seqStateSum = [0] * chrLength
         self.matchStateIdxList = []
         self.matchStatePositionList = []
 
-    def seqStateGenerator(self):
-        """
-        state - 0 unmatch, 1 union, 2 intersection
-        """
-        for position in self.repeatPositionList:
-            for base in range(position.startIdx, position.endIdx):
-                self.seqStateList[base] += 1
-        return self.seqStateList
+    def getSeqStateSum(self):
+        if len(self.seqStateList) == 2:
+            for idx, value in enumerate(self.seqStateSum):
+                self.seqStateSum[idx] = (
+                    self.seqStateList[0][idx] + self.seqStateList[1][idx]
+                )
+        else:
+            print("Number of seqState Error")
+        return self.seqStateSum
 
     def getSeqStateInfo(self):
         unMatchState = filter(
-            lambda x: x == self.seqStates["unMatch"], self.seqStateList
+            lambda x: x == self.seqStates["unMatch"], self.seqStateSum
         )
         unionState = filter(
             lambda x: (x == self.seqStates["union"])
             or (x == self.seqStates["intersection"]),
-            self.seqStateList,
+            self.seqStateSum,
         )
         intersectionState = filter(
-            lambda x: x == self.seqStates["intersection"], self.seqStateList
+            lambda x: x == self.seqStates["intersection"], self.seqStateSum
         )
         print(
             f"chr: {self.chrLength}\nunMatch: {len(list(unMatchState))}, union:{len(list(unionState))}, intersection:{len(list(intersectionState))}"
@@ -41,13 +43,13 @@ class MultipleCutter:
         if stateName == "intersection":
             self.matchStateIdxList = [
                 idx
-                for idx, state in enumerate(self.seqStateList)
+                for idx, state in enumerate(self.seqStateSum)
                 if state == self.seqStates[stateName]
             ]
         elif stateName == "union":
             self.matchStateIdxList = [
                 idx
-                for idx, state in enumerate(self.seqStateList)
+                for idx, state in enumerate(self.seqStateSum)
                 if (
                     (state == self.seqStates[stateName])
                     or (state == self.seqStates["intersection"])
@@ -84,3 +86,7 @@ class MultipleCutter:
                     break
             idx = idx + baseCount
         return self.matchStatePositionList
+
+    def generateSeqStateSumFile(self, filePath):
+        with open(filePath, "w") as f:
+            f.write("".join(str(state) for state in self.seqStateSum))

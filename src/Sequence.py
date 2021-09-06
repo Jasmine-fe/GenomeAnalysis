@@ -38,12 +38,17 @@ class Sequence:
         self.repeatPositionList = []
         self.cutter = cutter
         self.parseFastaSeqs = None
+        self.seqStateList = None
 
     def parseFasta(self):
         self.parseFastaSeqs = parseFasta(
             currDataset, datasetPath, matchPattern, matchMode=False
         )
+        self.initSeqStateList()
         return self.parseFastaSeqs
+
+    def initSeqStateList(self):
+        self.seqStateList = [0] * len(self.parseFastaSeqs[0])
 
     def parseSeqByCutter(self):
         self.fragmentLenList, self.fragmentSeqList = parseSeqByCutter(
@@ -114,3 +119,13 @@ class Sequence:
             if i.seq in repeatSeqs:
                 filterPositionList.append(i)
         return filterPositionList
+
+    def seqStateGenerator(self):
+        """
+        state - 0 unmatch, 1 union, 2 intersection
+        """
+        for position in self.repeatPositionList:
+            for base in range(position.startIdx, position.endIdx):
+                self.seqStateList[base] += 1
+        self.seqStateList = list(map(lambda x: 1 if x > 1 else x, self.seqStateList))
+        return self.seqStateList
