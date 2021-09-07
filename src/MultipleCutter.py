@@ -1,4 +1,5 @@
 import re
+import pandas as pd
 from DataStructure import PositionInfo
 
 
@@ -78,6 +79,10 @@ class MultipleCutter:
             else:
                 self.matchStatePositionList.append(
                     PositionInfo(
+                        (
+                            self.matchStateIdxList[idx + baseCount - 1]
+                            - self.matchStateIdxList[idx]
+                        ),
                         self.matchStateIdxList[idx],
                         self.matchStateIdxList[idx + baseCount - 1],
                     )

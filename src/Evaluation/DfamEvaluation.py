@@ -6,8 +6,6 @@ from Bio import SeqIO, pairwise2
 from SharedInfo import chrPattern, humanChrKey
 from Evaluation.RepeatEvaluation import RepeatEvaluation
 from DataStructure import (
-    DfamConSeqInfo,
-    PositionInfo,
     DfamPositionInfo,
     refSeqSimilarityInfo,
 )

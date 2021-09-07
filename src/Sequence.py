@@ -94,7 +94,9 @@ class Sequence:
             for fragposition in repeatN.position:
                 self.repeatPositionList.append(
                     PositionInfo(
-                        fragposition.baseIdx, fragposition.baseIdx + repeatFragNLen
+                        repeatFragNLen,
+                        fragposition.baseIdx,
+                        fragposition.baseIdx + repeatFragNLen,
                     )
                 )
         self.repeatPositionList.sort(key=lambda x: x[0])

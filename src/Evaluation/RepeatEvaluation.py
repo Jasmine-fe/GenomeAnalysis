@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from Bio import pairwise2
 from collections import namedtuple, Counter
-from DataStructure import DfamConSeqInfo, PositionInfo, RepeatFragNInfo
+from DataStructure import DfamConSeqInfo, RepeatFragNInfo
 from SharedInfo import fragmentN
 
 
