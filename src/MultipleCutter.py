@@ -1,16 +1,21 @@
 import re
+import sys
 import pandas as pd
-from DataStructure import PositionInfo
+from SharedInfo import cutterA, cutterB
+from Util.SeqUtil import parseSeqByCutter
+from DataStructure import RepeatSeqOutputInfo
 
 
 class MultipleCutter:
-    def __init__(self, chrLength, seqStateList):
+    def __init__(self, sequence, seqStateList):
         self.seqStates = {"unMatch": 0, "union": 1, "intersection": 2}
-        self.chrLength = chrLength
+        self.sequence = sequence
+        self.seqLength = len(sequence)
         self.seqStateList = seqStateList
-        self.seqStateSum = [0] * chrLength
+        self.seqStateSum = [0] * len(sequence)
         self.matchStateIdxList = []
-        self.matchStatePositionList = []
+        self.matchStateRepeatInfoList = []
+        self.repeatFrgmentDf = None
 
     def getSeqStateSum(self):
         if len(self.seqStateList) == 2:
@@ -35,7 +40,7 @@ class MultipleCutter:
             lambda x: x == self.seqStates["intersection"], self.seqStateSum
         )
         print(
-            f"chr: {self.chrLength}\nunMatch: {len(list(unMatchState))}, union:{len(list(unionState))}, intersection:{len(list(intersectionState))}"
+            f"chr: {self.seqLength}\nunMatch: {len(list(unMatchState))}, union:{len(list(unionState))}, intersection:{len(list(intersectionState))}"
         )
         return unMatchState, unionState, intersectionState
 
@@ -59,17 +64,16 @@ class MultipleCutter:
         return self.matchStateIdxList
 
     def getSpecificStatePositionList(self):
-
         """
-        idx+baseIdx < leng(matchStatePositionList)
+        idx+baseIdx < leng(matchStateRepeatInfoList)
         idx : 400
         baseIdx = 1
-        baseIdx == (matchStatePositionList[idx+baseIdx] - matchStatePositionList[idx])
+        baseIdx == (matchStateRepeatInfoList[idx+baseIdx] - matchStateRepeatInfoList[idx])
         """
 
-        self.matchStatePositionList = []
+        self.matchStateRepeatInfoList = []
         idx = 0
-        while self.matchStateIdxList[idx] < self.chrLength:
+        while self.matchStateIdxList[idx] < self.seqLength:
             baseCount = 1
             while (idx + baseCount < len(self.matchStateIdxList)) and (
                 (self.matchStateIdxList[idx + baseCount] - self.matchStateIdxList[idx])
@@ -77,21 +81,84 @@ class MultipleCutter:
             ):
                 baseCount += 1
             else:
-                self.matchStatePositionList.append(
-                    PositionInfo(
+                startIdx = self.matchStateIdxList[idx]
+                endIdx = self.matchStateIdxList[idx + baseCount - 1]
+                self.matchStateRepeatInfoList.append(
+                    RepeatSeqOutputInfo(
                         (
                             self.matchStateIdxList[idx + baseCount - 1]
                             - self.matchStateIdxList[idx]
                         ),
-                        self.matchStateIdxList[idx],
-                        self.matchStateIdxList[idx + baseCount - 1],
+                        startIdx,
+                        endIdx,
+                        self.sequence[startIdx:endIdx],
                     )
                 )
                 if idx + baseCount >= len(self.matchStateIdxList):
                     break
             idx = idx + baseCount
-        return self.matchStatePositionList
+        return self.matchStateRepeatInfoList
 
     def generateSeqStateSumFile(self, filePath):
         with open(filePath, "w") as f:
             f.write("".join(str(state) for state in self.seqStateSum))
+
+    def cutRepeatSeqToFragment(self):
+        self.matchStateRepeatInfoList.sort(key=lambda x: x.length, reverse=True)
+        totalRepeat = pd.DataFrame(columns=["length", "startIdx", "endIdx", "seq"])
+        for repeatInfo in self.matchStateRepeatInfoList[:1]:
+            if repeatInfo.seq[: len(cutterA)] == cutterA:
+                fragmentsLenList, fragmentsSeqList = parseSeqByCutter(
+                    [repeatInfo.seq], cutter=cutterA
+                )
+                df = self.cauculateSeqPosition(
+                    repeatInfo, len(cutterA), fragmentsLenList[0], fragmentsSeqList[0]
+                )
+            elif repeatInfo.seq[: len(cutterB)] == cutterB:
+                fragmentsLenList, fragmentsSeqList = parseSeqByCutter(
+                    [repeatInfo.seq], cutter=cutterB
+                )
+                df = self.cauculateSeqPosition(
+                    repeatInfo, len(cutterB), fragmentsLenList[0], fragmentsSeqList[0]
+                )
+            else:
+                print("Error")
+
+            if (len(fragmentsLenList[0]) > 0) and (len(fragmentsSeqList[0]) > 0):
+                totalRepeat = totalRepeat.append(df, ignore_index=True)
+        self.repeatFrgmentDf = totalRepeat.loc[df["length"] != 0]
+        return self.repeatFrgmentDf
+
+    def cauculateSeqPosition(
+        self, repeatInfo, cutterLen, fragmentsLenList, fragmentsSeqList
+    ):
+        df = pd.DataFrame(columns=["length", "startIdx", "endIdx", "seq"])
+        startIdx = repeatInfo.startIdx
+        for idx, fragmentLength in enumerate(fragmentsLenList):
+            start = startIdx + sum(fragmentsLenList[:idx]) + cutterLen * idx
+            end = start + fragmentLength
+            df = df.append(
+                {
+                    "length": fragmentLength,
+                    "startIdx": start,
+                    "endIdx": end,
+                    "seq": fragmentsSeqList[idx],
+                },
+                ignore_index=True,
+            )
+        return df
+
+    def fragmentGroupbyLen(self):
+        matchDfGroupByLen = self.repeatFrgmentDf.groupby(by=["length"], sort=True)
+        temDf = self.repeatFrgmentDf.groupby(by=["length"]).agg({"length": "sum"})
+        original_stdout = sys.stdout
+        with open(f"../outputFile/SeqState/groupByLenData.txt", "w") as f:
+            sys.stdout = f
+            for key, row in temDf.iterrows():
+                print(f"{key}:")
+                for i in matchDfGroupByLen.get_group(key).index:
+                    print(
+                        f"({ self.repeatFrgmentDf.iloc[i]['startIdx']}, {self.repeatFrgmentDf.iloc[i]['endIdx']})\n{ self.repeatFrgmentDf.iloc[i]['seq']}"
+                    )
+                print("\n")
+            sys.stdout = original_stdout
