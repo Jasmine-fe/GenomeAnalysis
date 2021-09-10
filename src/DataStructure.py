@@ -29,3 +29,7 @@ DfamPositionInfo = namedtuple(
 refSeqSimilarityInfo = namedtuple(
     "refSeqSimilarityInfo", ["hitId", "targetSeqLength", "similarityPercentage"]
 )
+
+RepeatSeqOutputInfo = namedtuple(
+    "RepeatSeqOutputInfo", ["length", "startIdx", "endIdx", "seq"]
+)
