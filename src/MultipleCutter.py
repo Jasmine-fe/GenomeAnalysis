@@ -104,45 +104,44 @@ class MultipleCutter:
             f.write("".join(str(state) for state in self.seqStateSum))
 
     def cutRepeatSeqToFragment(self):
-        self.matchStateRepeatInfoList.sort(key=lambda x: x.length, reverse=True)
+        # self.matchStateRepeatInfoList.sort(key=lambda x: x.length, reverse=True)
         totalRepeat = pd.DataFrame(columns=["length", "startIdx", "endIdx", "seq"])
-        for repeatInfo in self.matchStateRepeatInfoList[:1]:
+        for repeatInfo in self.matchStateRepeatInfoList:
             if repeatInfo.seq[: len(cutterA)] == cutterA:
                 fragmentsLenList, fragmentsSeqList = parseSeqByCutter(
                     [repeatInfo.seq], cutter=cutterA
                 )
                 df = self.cauculateSeqPosition(
-                    repeatInfo, len(cutterA), fragmentsLenList[0], fragmentsSeqList[0]
+                    repeatInfo, cutterA, fragmentsLenList[0], fragmentsSeqList[0]
                 )
             elif repeatInfo.seq[: len(cutterB)] == cutterB:
                 fragmentsLenList, fragmentsSeqList = parseSeqByCutter(
                     [repeatInfo.seq], cutter=cutterB
                 )
                 df = self.cauculateSeqPosition(
-                    repeatInfo, len(cutterB), fragmentsLenList[0], fragmentsSeqList[0]
+                    repeatInfo, cutterB, fragmentsLenList[0], fragmentsSeqList[0]
                 )
-            else:
-                print("Error")
 
             if (len(fragmentsLenList[0]) > 0) and (len(fragmentsSeqList[0]) > 0):
                 totalRepeat = totalRepeat.append(df, ignore_index=True)
-        self.repeatFrgmentDf = totalRepeat.loc[df["length"] != 0]
+        self.repeatFrgmentDf = totalRepeat.loc[totalRepeat["length"] != 0]
+        self.repeatFrgmentDf.reset_index(inplace=True, drop=True)
         return self.repeatFrgmentDf
 
     def cauculateSeqPosition(
-        self, repeatInfo, cutterLen, fragmentsLenList, fragmentsSeqList
+        self, repeatInfo, cutter, fragmentsLenList, fragmentsSeqList
     ):
         df = pd.DataFrame(columns=["length", "startIdx", "endIdx", "seq"])
         startIdx = repeatInfo.startIdx
         for idx, fragmentLength in enumerate(fragmentsLenList):
-            start = startIdx + sum(fragmentsLenList[:idx]) + cutterLen * idx
-            end = start + fragmentLength
+            start = startIdx + sum(fragmentsLenList[:idx]) + len(cutter) * (idx - 1)
+            end = start + len(cutter) + fragmentLength
             df = df.append(
                 {
                     "length": fragmentLength,
                     "startIdx": start,
                     "endIdx": end,
-                    "seq": fragmentsSeqList[idx],
+                    "seq": repeatInfo.seq[start - startIdx : end - startIdx],
                 },
                 ignore_index=True,
             )
@@ -152,7 +151,9 @@ class MultipleCutter:
         matchDfGroupByLen = self.repeatFrgmentDf.groupby(by=["length"], sort=True)
         temDf = self.repeatFrgmentDf.groupby(by=["length"]).agg({"length": "sum"})
         original_stdout = sys.stdout
-        with open(f"../outputFile/SeqState/groupByLenData.txt", "w") as f:
+        with open(
+            f"../outputFile/SeqState/fragmentgroupByLenData_intersection.txt", "w"
+        ) as f:
             sys.stdout = f
             for key, row in temDf.iterrows():
                 print(f"{key}:")
