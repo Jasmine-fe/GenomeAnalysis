@@ -104,7 +104,6 @@ class MultipleCutter:
             f.write("".join(str(state) for state in self.seqStateSum))
 
     def cutRepeatSeqToFragment(self):
-        # self.matchStateRepeatInfoList.sort(key=lambda x: x.length, reverse=True)
         totalRepeat = pd.DataFrame(columns=["length", "startIdx", "endIdx", "seq"])
         for repeatInfo in self.matchStateRepeatInfoList:
             if repeatInfo.seq[: len(cutterA)] == cutterA:
