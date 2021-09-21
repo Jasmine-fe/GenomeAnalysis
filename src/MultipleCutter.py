@@ -104,24 +104,27 @@ class MultipleCutter:
             f.write("".join(str(state) for state in self.seqStateSum))
 
     def cutRepeatSeqToFragment(self):
+        """
+        Using cutterA, if sequence not start from cutter
+        """
         totalRepeat = pd.DataFrame(columns=["length", "startIdx", "endIdx", "seq"])
         for repeatInfo in self.matchStateRepeatInfoList:
-            if repeatInfo.seq[: len(cutterA)] == cutterA:
-                fragmentsLenList, fragmentsSeqList = parseSeqByCutter(
-                    [repeatInfo.seq], cutter=cutterA
-                )
-                df = self.cauculateSeqPosition(
-                    repeatInfo, cutterA, fragmentsLenList[0], fragmentsSeqList[0]
-                )
-            elif repeatInfo.seq[: len(cutterB)] == cutterB:
+            if repeatInfo.seq[: len(cutterB)] == cutterB:
                 fragmentsLenList, fragmentsSeqList = parseSeqByCutter(
                     [repeatInfo.seq], cutter=cutterB
                 )
                 df = self.cauculateSeqPosition(
                     repeatInfo, cutterB, fragmentsLenList[0], fragmentsSeqList[0]
                 )
+            else:
+                fragmentsLenList, fragmentsSeqList = parseSeqByCutter(
+                    [repeatInfo.seq], cutter=cutterA
+                )
+                df = self.cauculateSeqPosition(
+                    repeatInfo, cutterA, fragmentsLenList[0], fragmentsSeqList[0]
+                )
 
-            if (len(fragmentsLenList[0]) > 0) and (len(fragmentsSeqList[0]) > 0):
+            if (len(fragmentsLenList) > 0) and (len(fragmentsLenList[0]) > 0):
                 totalRepeat = totalRepeat.append(df, ignore_index=True)
         self.repeatFrgmentDf = totalRepeat.loc[totalRepeat["length"] != 0]
         self.repeatFrgmentDf.reset_index(inplace=True, drop=True)
@@ -130,17 +133,43 @@ class MultipleCutter:
     def cauculateSeqPosition(
         self, repeatInfo, cutter, fragmentsLenList, fragmentsSeqList
     ):
+        """
+        3 Cases - Start, Middle, End
+        """
         df = pd.DataFrame(columns=["length", "startIdx", "endIdx", "seq"])
         startIdx = repeatInfo.startIdx
         for idx, fragmentLength in enumerate(fragmentsLenList):
             start = startIdx + sum(fragmentsLenList[:idx]) + len(cutter) * (idx - 1)
-            end = start + len(cutter) + fragmentLength
+            if len(fragmentsLenList) > 1:
+                if idx == 0:
+                    print("start")
+                    start = startIdx
+                    end = start + len(cutter) + fragmentLength
+                    seq = fragmentsSeqList[idx] + cutter
+                elif idx == len(fragmentsLenList) - 1:
+                    print("end")
+                    start = (
+                        startIdx + sum(fragmentsLenList[:idx]) + len(cutter) * (idx - 1)
+                    )
+                    end = start + len(cutter) + fragmentLength
+                    seq = cutter + fragmentsSeqList[idx] + cutter
+                else:
+                    print("middle")
+                    start = (
+                        startIdx + sum(fragmentsLenList[:idx]) + len(cutter) * (idx - 1)
+                    )
+                    end = start + fragmentLength
+                    seq = cutter + fragmentsSeqList[idx]
+            else:
+                start = startIdx
+                end = start + fragmentLength
+                seq = fragmentsSeqList[idx]
             df = df.append(
                 {
-                    "length": fragmentLength,
+                    "length": len(seq),
                     "startIdx": start,
-                    "endIdx": end,
-                    "seq": repeatInfo.seq[start - startIdx : end - startIdx],
+                    "endIdx": start + len(seq),
+                    "seq": seq,
                 },
                 ignore_index=True,
             )
@@ -151,7 +180,8 @@ class MultipleCutter:
         temDf = self.repeatFrgmentDf.groupby(by=["length"]).agg({"length": "sum"})
         original_stdout = sys.stdout
         with open(
-            f"../outputFile/SeqState/fragmentgroupByLenData_intersection.txt", "w"
+            f"../outputFile/SeqState/fragmentgroupByLenData_intersection_{cutterA}.txt",
+            "w",
         ) as f:
             sys.stdout = f
             for key, row in temDf.iterrows():
