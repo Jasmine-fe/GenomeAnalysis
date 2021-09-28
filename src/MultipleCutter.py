@@ -137,42 +137,30 @@ class MultipleCutter:
         3 Cases - Start, Middle, End
         """
         df = pd.DataFrame(columns=["length", "startIdx", "endIdx", "seq"])
+        cutterLen = len(cutter)
         startIdx = repeatInfo.startIdx
-        for idx, fragmentLength in enumerate(fragmentsLenList):
-            start = startIdx + sum(fragmentsLenList[:idx]) + len(cutter) * (idx - 1)
-            if len(fragmentsLenList) > 1:
-                if idx == 0:
-                    print("start")
-                    start = startIdx
-                    end = start + len(cutter) + fragmentLength
-                    seq = fragmentsSeqList[idx] + cutter
-                elif idx == len(fragmentsLenList) - 1:
-                    print("end")
-                    start = (
-                        startIdx + sum(fragmentsLenList[:idx]) + len(cutter) * (idx - 1)
-                    )
-                    end = start + len(cutter) + fragmentLength
-                    seq = cutter + fragmentsSeqList[idx] + cutter
-                else:
-                    print("middle")
-                    start = (
-                        startIdx + sum(fragmentsLenList[:idx]) + len(cutter) * (idx - 1)
-                    )
-                    end = start + fragmentLength
-                    seq = cutter + fragmentsSeqList[idx]
-            else:
-                start = startIdx
-                end = start + fragmentLength
-                seq = fragmentsSeqList[idx]
-            df = df.append(
-                {
-                    "length": len(seq),
-                    "startIdx": start,
-                    "endIdx": start + len(seq),
-                    "seq": seq,
-                },
-                ignore_index=True,
-            )
+        for fragmentIdx, fragmentLength in enumerate(fragmentsLenList):
+            if fragmentLength > 0:
+                start = (
+                    startIdx
+                    + sum(fragmentsLenList[:fragmentIdx])
+                    + cutterLen * (fragmentIdx - 1)
+                )
+                end = (
+                    startIdx
+                    + sum(fragmentsLenList[: fragmentIdx + 1])
+                    + cutterLen * (fragmentIdx + 1)
+                )
+                seq = cutter + fragmentsSeqList[fragmentIdx] + cutter
+                df = df.append(
+                    {
+                        "length": len(seq),
+                        "startIdx": start,
+                        "endIdx": end,
+                        "seq": seq,
+                    },
+                    ignore_index=True,
+                )
         return df
 
     def fragmentGroupbyLen(self):

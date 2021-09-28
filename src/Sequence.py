@@ -90,13 +90,13 @@ class Sequence:
         seqList = self.filterRepeatInfoList if filter else self.repeatInfoList
         cutterLen = len(self.cutter)
         for repeatN in seqList:
-            repeatFragNLen = sum(repeatN.fragmentLenList) + cutterLen * fragmentN
+            repeatFragNLen = sum(repeatN.fragmentLenList) + cutterLen * (fragmentN + 1)
             for fragposition in repeatN.position:
                 self.repeatPositionList.append(
                     PositionInfo(
                         repeatFragNLen,
                         fragposition.baseIdx,
-                        fragposition.baseIdx + repeatFragNLen,
+                        fragposition.baseIdx + repeatFragNLen + 1,
                     )
                 )
         self.repeatPositionList.sort(key=lambda x: x[0])
@@ -128,6 +128,9 @@ class Sequence:
         """
         for position in self.repeatPositionList:
             for base in range(position.startIdx, position.endIdx):
+                # for base in range(
+                #     position.startIdx - len(self.cutter), position.endIdx + len(self.cutter)
+                # ):
                 self.seqStateList[base] += 1
         self.seqStateList = list(map(lambda x: 1 if x > 1 else x, self.seqStateList))
         return self.seqStateList

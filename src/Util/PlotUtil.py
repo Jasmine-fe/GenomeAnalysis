@@ -18,11 +18,13 @@ def basicPlot(
     for row in sortedCounterList:
         df = df.append({"x": row[0], "y": row[1]}, ignore_index=True)
     fig, ax = plt.subplots(figsize=(10, 6), dpi=300)
+    plt.yticks(np.arange(0, 6, step=1))
     sns.set_style("whitegrid")
     sns.lineplot(data=df, x="x", y="y")
     ax.set_xlabel(xlabel, size=15)
     ax.set_ylabel(ylabel, size=15)
-    ax.set_xlim(0, xlimUpperBound)
+
+    xlimUpperBound and ax.set_xlim(0, xlimUpperBound)
 
 
 def twoLabelBasicPlot(
