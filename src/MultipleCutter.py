@@ -151,7 +151,12 @@ class MultipleCutter:
                     + sum(fragmentsLenList[: fragmentIdx + 1])
                     + cutterLen * (fragmentIdx + 1)
                 )
-                seq = cutter + fragmentsSeqList[fragmentIdx] + cutter
+                seq = self.sequence[start:end]
+                # last frgment case
+                if fragmentIdx == len(fragmentsLenList) - 1:
+                    seq = self.sequence[start : repeatInfo.endIdx]
+                    end = start + len(seq) + 1
+
                 df = df.append(
                     {
                         "length": len(seq),
