@@ -155,7 +155,7 @@ class MultipleCutter:
                 # last frgment case
                 if fragmentIdx == len(fragmentsLenList) - 1:
                     seq = self.sequence[start : repeatInfo.endIdx]
-                    end = start + len(seq) + 1
+                    end = start + len(seq)
 
                 df = df.append(
                     {
@@ -177,6 +177,20 @@ class MultipleCutter:
             "w",
         ) as f:
             sys.stdout = f
+
+            groupbyData = (
+                self.repeatFrgmentDf["length"]
+                .value_counts()
+                .rename_axis("length")
+                .reset_index(name="counts")
+            )
+            singleRepeatFragmentLen = len(groupbyData[groupbyData["counts"] == 1])
+            fragmentCount = groupbyData["counts"].sum()
+            lengthCount = len(groupbyData)
+            print("Frgment Information: ")
+            print(
+                f"fragmentCount:{fragmentCount}\nsingleRepeatFragmentCount:{singleRepeatFragmentLen}\nlengthCount:{lengthCount}\n"
+            )
             for key, row in temDf.iterrows():
                 print(f"{key}:")
                 for i in matchDfGroupByLen.get_group(key).index:
