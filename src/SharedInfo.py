@@ -23,7 +23,7 @@ matchPattern = noPattern
 # shared var
 fragmentN = 1
 
-cutterA = "GATCG"
+cutterA = "GATC"
 cutterB = "AAGCTT"
 
 # Plot

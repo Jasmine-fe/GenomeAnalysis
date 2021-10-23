@@ -173,7 +173,7 @@ class MultipleCutter:
         temDf = self.repeatFrgmentDf.groupby(by=["length"]).agg({"length": "sum"})
         original_stdout = sys.stdout
         with open(
-            f"../outputFile/SeqState/fragmentgroupByLenData_intersection_{cutterA}.txt",
+            f"../outputFile/seqRepeatPosition/fragmentgroupByLenData_intersection_{cutterA}.txt",
             "w",
         ) as f:
             sys.stdout = f

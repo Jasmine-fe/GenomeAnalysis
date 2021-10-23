@@ -36,6 +36,7 @@ class Sequence:
         self.repeatInfoList = []
         self.filterRepeatInfoList = []
         self.repeatPositionList = []
+        self.repeatPositionTable = None
         self.cutter = cutter
         self.parseFastaSeqs = None
         self.seqStateList = None
@@ -82,7 +83,7 @@ class Sequence:
                 lengthLimitList.append(i)
         return lengthLimitList
 
-    def getRepeatPositionList(self, filter=True):
+    def getRepeatPositionList(self, filter=True):  # [ modify filter ]
         """
         Return
         repeatPositionList: [(startIdx, endIdx), ...]
@@ -100,6 +101,8 @@ class Sequence:
                     )
                 )
         self.repeatPositionList.sort(key=lambda x: x[0])
+        self.repeatPositionTable = pd.DataFrame(self.repeatPositionList)
+        self.getSeqFromPositionIdx()
         return self.repeatPositionList
 
     def filterRepeatInfo(self):
@@ -121,6 +124,68 @@ class Sequence:
             if i.seq in repeatSeqs:
                 filterPositionList.append(i)
         return filterPositionList
+
+    def getSeqFromPositionIdx(self):
+        self.repeatPositionTable["seq"] = [
+            str(self.parseFastaSeqs[0][row["startIdx"] : row["endIdx"]])
+            for idx, row in self.repeatPositionTable.iterrows()
+        ]
+        return self.repeatPositionTable
+
+    def getRepeatFragentInfo(self):
+        frgmentCount = len(self.repeatPositionTable)
+        lengthCount = self.repeatPositionTable["length"].nunique()
+        return lengthCount, frgmentCount
+
+    def generateRepeatFragentFile(self, filePath="tem.txt"):
+        lengthCount, frgmentCount = self.getRepeatFragentInfo()
+        uniqueLengthList = set(self.repeatPositionTable["length"])
+        with open(filePath, "w") as outputFile:
+            outputFile.write(
+                f"Info:\nlengthCount:{lengthCount}, frgmentCount:{frgmentCount}\n"
+            )
+            for length in uniqueLengthList:
+                output = f"{length}\n"
+                targetPositionTable = self.repeatPositionTable[
+                    self.repeatPositionTable["length"] == length
+                ]
+                for key, row in targetPositionTable.iterrows():
+                    output += (
+                        f'({row["startIdx"]}, {row["endIdx"]})'
+                        + "\n"
+                        + row["seq"]
+                        + "\n"
+                    )
+                outputFile.write(output + "\n")
+
+    def calculateDiversityRatio(self, repeatPositionTable):
+        """
+        repeatPositionTable (length , seq)
+        """
+        fragmentGroupByLenCountDf = (
+            repeatPositionTable.groupby("length", as_index=False)
+            .agg({"seq": "count"})
+            .rename(columns={"seq": "lengthSeqCount"})
+        )
+        fragmentGroupBySeqAndLenKeys = (
+            repeatPositionTable.groupby(["length", "seq"], as_index=False)
+            .agg({"seq": "count"})
+            .rename(columns={"seq": "seqTypeCount"})
+        )
+        mergedFragmentGroupByDf = fragmentGroupBySeqAndLenKeys.merge(
+            fragmentGroupByLenCountDf, how="left", on="length"
+        )
+        mergedFragmentGroupByDf["diversityRatio"] = (
+            mergedFragmentGroupByDf["seqTypeCount"]
+            * mergedFragmentGroupByDf["seqTypeCount"]
+        ) / (
+            mergedFragmentGroupByDf["lengthSeqCount"]
+            * mergedFragmentGroupByDf["lengthSeqCount"]
+        )
+        diversityRatioDf = mergedFragmentGroupByDf.groupby(
+            "length", as_index=False
+        ).agg({"diversityRatio": "sum"})
+        return diversityRatioDf
 
     def seqStateGenerator(self):
         """
