@@ -83,7 +83,7 @@ class Sequence:
                 lengthLimitList.append(i)
         return lengthLimitList
 
-    def getRepeatPositionList(self, filter=True):  # [ modify filter ]
+    def getRepeatPositionList(self, filter=True):
         """
         Return
         repeatPositionList: [(startIdx, endIdx), ...]
@@ -119,7 +119,9 @@ class Sequence:
     def filterSeqPosition(self, positionList):
         filterPositionList = []
         seqCounter = Counter([i.seq for i in positionList])
-        repeatSeqs = [x for x, count in seqCounter.items() if count > 1]
+        repeatSeqs = [
+            x for x, count in seqCounter.items() if count > 1
+        ]  # [ modify count ] filter out group length seqCount > 1
         for i in positionList:
             if i.seq in repeatSeqs:
                 filterPositionList.append(i)
@@ -139,7 +141,7 @@ class Sequence:
 
     def generateRepeatFragentFile(self, filePath="tem.txt"):
         lengthCount, frgmentCount = self.getRepeatFragentInfo()
-        uniqueLengthList = set(self.repeatPositionTable["length"])
+        uniqueLengthList = sorted(list(set(self.repeatPositionTable["length"])))
         with open(filePath, "w") as outputFile:
             outputFile.write(
                 f"Info:\nlengthCount:{lengthCount}, frgmentCount:{frgmentCount}\n"
@@ -158,7 +160,7 @@ class Sequence:
                     )
                 outputFile.write(output + "\n")
 
-    def calculateDiversityRatio(self, repeatPositionTable):
+    def calculateConsistencyRatio(self, repeatPositionTable):
         """
         repeatPositionTable (length , seq)
         """
@@ -175,17 +177,17 @@ class Sequence:
         mergedFragmentGroupByDf = fragmentGroupBySeqAndLenKeys.merge(
             fragmentGroupByLenCountDf, how="left", on="length"
         )
-        mergedFragmentGroupByDf["diversityRatio"] = (
+        mergedFragmentGroupByDf["consistencyRatio"] = (
             mergedFragmentGroupByDf["seqTypeCount"]
             * mergedFragmentGroupByDf["seqTypeCount"]
         ) / (
             mergedFragmentGroupByDf["lengthSeqCount"]
             * mergedFragmentGroupByDf["lengthSeqCount"]
         )
-        diversityRatioDf = mergedFragmentGroupByDf.groupby(
+        consistencyRatioDf = mergedFragmentGroupByDf.groupby(
             "length", as_index=False
-        ).agg({"diversityRatio": "sum"})
-        return diversityRatioDf
+        ).agg({"consistencyRatio": "sum"})
+        return consistencyRatioDf
 
     def seqStateGenerator(self):
         """
@@ -196,6 +198,9 @@ class Sequence:
                 # for base in range(
                 #     position.startIdx - len(self.cutter), position.endIdx + len(self.cutter)
                 # ):
-                self.seqStateList[base] += 1
+                if position.endIdx < len(self.parseFastaSeqs[0]):
+                    self.seqStateList[base] += 1
+                # else:
+                #     print("[ Error]: seqStateGenerator out of index, ", position.endIdx)
         self.seqStateList = list(map(lambda x: 1 if x > 1 else x, self.seqStateList))
         return self.seqStateList

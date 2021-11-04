@@ -12,7 +12,7 @@ from DataStructure import (
 
 
 class DfamEvaluation(RepeatEvaluation):
-    def __init__(self, repeatPositionList, hitFileName="chrX_LTR_dm6_dfam.nrph.hits"):
+    def __init__(self, repeatPositionList, hitFileName="chrX_dm6_dfam.nrph.hits"):
         super().__init__(repeatPositionList)
         self.dfamPositionList = []
         self.dfamPositionLookupDic = dict()
@@ -53,10 +53,6 @@ class DfamEvaluation(RepeatEvaluation):
             refStart, refEnd = ref.startIdx, ref.endIdx
             flag = 0
             for repeatPosition in self.repeatPositionList:
-                # for bucketIdx in range(self.bucketAmount):
-                # if (self.repeatPositionLookupDic[bucketIdx][0] <= refStart) and (
-                #     refEnd <= self.repeatPositionLookupDic[bucketIdx][1]
-                # ):
                 if (
                     refStart in range(repeatPosition.startIdx, repeatPosition.endIdx)
                 ) or (refEnd in range(repeatPosition.startIdx, repeatPosition.endIdx)):
