@@ -109,20 +109,28 @@ class MultipleCutter:
         """
         totalRepeat = pd.DataFrame(columns=["length", "startIdx", "endIdx", "seq"])
         for repeatInfo in self.matchStateRepeatInfoList:
+            flag = "C"
             if repeatInfo.seq[: len(cutterB)] == cutterB:
+                flag = "B"
                 fragmentsLenList, fragmentsSeqList = parseSeqByCutter(
                     [repeatInfo.seq], cutter=cutterB
                 )
-                df = self.cauculateSeqPosition(
-                    repeatInfo, cutterB, fragmentsLenList[0], fragmentsSeqList[0]
-                )
+                df = self.cauculateSeqPosition(repeatInfo, cutterB, fragmentsLenList[0])
             else:
+                flag = "A"
                 fragmentsLenList, fragmentsSeqList = parseSeqByCutter(
                     [repeatInfo.seq], cutter=cutterA
                 )
-                df = self.cauculateSeqPosition(
-                    repeatInfo, cutterA, fragmentsLenList[0], fragmentsSeqList[0]
+                df = self.cauculateSeqPosition(repeatInfo, cutterA, fragmentsLenList[0])
+
+            # For single fragment
+            if len(fragmentsLenList) <= 1:
+                testCutter = cutterB if flag == "A" else cutterA
+                testFragmentsLenList, testFragmentsSeqList = parseSeqByCutter(
+                    [repeatInfo.seq], cutter=testCutter
                 )
+                if len(testFragmentsLenList) > len(fragmentsLenList):
+                    fragmentsLenList = testFragmentsLenList
 
             if (len(fragmentsLenList) > 0) and (len(fragmentsLenList[0]) > 0):
                 totalRepeat = totalRepeat.append(df, ignore_index=True)
@@ -130,9 +138,7 @@ class MultipleCutter:
         self.repeatFrgmentDf.reset_index(inplace=True, drop=True)
         return self.repeatFrgmentDf
 
-    def cauculateSeqPosition(
-        self, repeatInfo, cutter, fragmentsLenList, fragmentsSeqList
-    ):
+    def cauculateSeqPosition(self, repeatInfo, cutter, fragmentsLenList):
         """
         3 Cases - Start, Middle, End
         """
@@ -170,32 +176,25 @@ class MultipleCutter:
 
     def fragmentGroupbyLen(self):
         matchDfGroupByLen = self.repeatFrgmentDf.groupby(by=["length"], sort=True)
-        temDf = self.repeatFrgmentDf.groupby(by=["length"]).agg({"length": "sum"})
-        original_stdout = sys.stdout
+        seqCountInLengthGroup = self.repeatFrgmentDf.groupby(
+            by=["length"], as_index=False
+        ).agg({"seq": "count"})
+
+        singleRepeatFragments = seqCountInLengthGroup[seqCountInLengthGroup["seq"] == 1]
+        fragmentCount = seqCountInLengthGroup["seq"].sum()
+
         with open(
-            f"../outputFile/seqRepeatPosition/fragmentgroupByLenData_intersection_{cutterA}.txt",
+            f"../outputFile/seqRepeatPosition/multiple_cutter_{cutterA}_{cutterB}.txt",
             "w",
         ) as f:
-            sys.stdout = f
-
-            groupbyData = (
-                self.repeatFrgmentDf["length"]
-                .value_counts()
-                .rename_axis("length")
-                .reset_index(name="counts")
-            )
-            singleRepeatFragmentLen = len(groupbyData[groupbyData["counts"] == 1])
-            fragmentCount = groupbyData["counts"].sum()
-            lengthCount = len(groupbyData)
-            print("Frgment Information: ")
-            print(
-                f"fragmentCount:{fragmentCount}\nsingleRepeatFragmentCount:{singleRepeatFragmentLen}\nlengthCount:{lengthCount}\n"
-            )
-            for key, row in temDf.iterrows():
-                print(f"{key}:")
-                for i in matchDfGroupByLen.get_group(key).index:
-                    print(
-                        f"({ self.repeatFrgmentDf.iloc[i]['startIdx']}, {self.repeatFrgmentDf.iloc[i]['endIdx']})\n{ self.repeatFrgmentDf.iloc[i]['seq']}"
+            fragmentInfo = f"Frgment Information - fragmentCount:{fragmentCount} \t lengthCount:{len(seqCountInLengthGroup)}\n"
+            singleFragmentInfo = f"Single Fragment - count: {len(singleRepeatFragments)}, {singleRepeatFragments['length'].values}\n\n"
+            f.writelines([fragmentInfo, singleFragmentInfo])
+            for length in seqCountInLengthGroup["length"].values:
+                f.write(f"{length}:\n")
+                for i in matchDfGroupByLen.get_group(length).index:
+                    f.write(
+                        f"({ self.repeatFrgmentDf.iloc[i]['startIdx']}, {self.repeatFrgmentDf.iloc[i]['endIdx']})\n{ self.repeatFrgmentDf.iloc[i]['seq']}\n"
                     )
-                print("\n")
-            sys.stdout = original_stdout
+                f.write(f"\n\n")
+        return 0
